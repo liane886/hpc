@@ -22,7 +22,7 @@ LidDrivenCavity::LidDrivenCavity()
 
 LidDrivenCavity::~LidDrivenCavity()
 {
-	cout << "Object is being deleted" << endl;
+	cout << "Object is being deleted" << endl;	// print information
 }
 
 
