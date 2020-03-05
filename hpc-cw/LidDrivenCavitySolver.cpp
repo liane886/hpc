@@ -28,9 +28,11 @@ int main(int argc, char **argv)
     LidDrivenCavity* solver = new LidDrivenCavity();
 	int Nx = 161;
 	int Ny = 161;
+	double xlen = 1.0;
+	double ylen = 1.0;
 	double Re = 200.0;
 	double T = Re*Nx*Ny/4.0;
-	double dt = 0.00001;
+	double dt = 0.0001;
 	double *omag = new double [Ny*Nx];
 	double *fi = new double [Ny*Nx];
 	double *A = new double[(Nx-1)*(Ny-2)*(Nx-2)];

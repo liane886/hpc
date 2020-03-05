@@ -38,8 +38,6 @@ private:
     double Lx;
     double Ly;
     double Re;
-	double* vorticity = nullptr;
-	double* stream =  nullptr;
 	double* CalVI_A; 
 	double* CalVI_y;
 	double* CalVI_x;
@@ -49,3 +47,18 @@ private:
 //	double* CalV1_A = new double [(Ny-2)*(Nx-2)*(Ny-2)*(Nx-2)];
 //	double* CalV1_b = new double [(Ny-2)*(Nx-2)];
 	};
+
+class Poisson
+{
+private:
+    double dt;
+    double T;
+    int    Nx;
+    int    Ny;
+	double* v = nullptr;
+    double* s = nullptr;
+public: 
+	Poisson();
+	~Poisson();
+	void ComputeStreamFUnction();
+};
