@@ -185,8 +185,8 @@ void LidDrivenCavity::CalVorticityT(double* A, double* VortiInter,double* stream
 
 /**  Solve the equation 11
  * @brief Solve inter vortisity by y = A*x --> y    && using cblas-dsbmv (band& symmetric matrix)
- * @param 		A 			Matrix  A in the equation y = A*x 
- * @param 	VortiInter 		inter vorticity (y in the equation y = A*x)
+ * @param 		A 			Pointer to vector of length N*(Nx-1). Matrix A in the equation y = A*x is stored in this way.
+ * @param 	VortiInter 		Pointer to vector of length N & inter vorticity (y in the equation y = A*x)
  *
  */
  
@@ -196,14 +196,8 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* VortiInter,double* str
 	const double beta = 0.0;
 	const int Inc = 1; 	
 	const int Ldh = Nx-1;
-	const int k = Ldh -2;
+	const int k = Ldh -2;	
 	
-	double *RhsAns = new double [N]; // the answer of the right hand side of the equation 11
-	double *LhsStreamAns_i = new double[N]; 
-	double *LhsStreamAns_j = new double[N];
-	double *LhsVortiAns_i = new double[N];
-	double *LhsVortiAns_j = new double[N];
-	cblas_dsbmv(CblasColMajor,CblasUpper,N, k, 1/Re,A,Ldh,VortiInter,Inc,beta,RhsAns,Inc);
 	
 	// build the martix A to solve W_(i+1,j) - W_(i+1,j) using y = A* W
 	double *MatrixA_i = new double[N*(Nx-1)];
@@ -215,31 +209,77 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* VortiInter,double* str
 			A[i*Ldh_MatrixA_i + 2] = -1;				
 		}				
     }
-	
+
 	// build the martix A to solve W_(i,j+1) - W_(i,j-1) using y = A* W
 	double *MatrixA_j = new double[N*(Nx-1)];
-	const int Ldh_MatrixA_j = Nx;
+	const int Ldh_MatrixA_j = 2*(Nx-1)-1;
 	MatrixA_j[159] = -1;
 	for (int i = 1; i < N; ++i) {
 		if (i < Nx-2){			
-			MatrixA_j[i*Ldh + Ldh-1] = -1;	
+			MatrixA_j[i*Ldh_MatrixA_j + Ldh_MatrixA_j-1] = -1;	
 		}
 		else {			
-				MatrixA_j[i*Ldh + Ldh-1] = -1;
-				MatrixA_j[i*Ldh        ] = 1;								
+				MatrixA_j[i*Ldh_MatrixA_j + Ldh_MatrixA_j-1] = -1;
+				MatrixA_j[i*Ldh_MatrixA_j        ] = 1;								
 		}
 	}
+	double *RhsAns = new double [N]; // the answer of the right hand side of the equation 11
+	double *LhsStreamAns_i = new double[N]; 
+	double *LhsStreamAns_j = new double[N];
+	double *LhsVortiAns_i = new double[N];
+	double *LhsVortiAns_j = new double[N];
+	
 	
 	double det_y = 1.0/double (Ny-1);
 	double det_x = 1.0/double (Nx-1);
 	const int KLU_i = Ldh_MatrixA_i -2;  // sub-diagonal & super-diagonal
-	const int KLU_j = Ldh_MatrixA_j -2;
+	const int KLU_j =  Nx-2;
 	const double alpha_i = 0.5*det_y*det_x*det_y;
 	const double alpha_j = 0.5*det_y*det_x*det_x;
-	cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_i,KLU_i,alpha_i,MatrixA_i,Ldh_MatrixA_i,VortiInter,Inc,beta,LhsVortiAns_i,Inc);
-	cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_i,KLU_i,alpha_i,MatrixA_i,Ldh_MatrixA_i,streamInter,Inc,beta,LhsStreamAns_i,Inc);
-	cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_j,KLU_j,alpha_j,MatrixA_j,Ldh_MatrixA_j,VortiInter,Inc,beta,LhsStreamAns_j,Inc);
-	cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_j,KLU_j,alpha_j,MatrixA_j,Ldh_MatrixA_j,streamInter,Inc,beta,LhsStreamAns_j,Inc);
+
+	//double eps;
+	//int k;               //iteration counter
+	double tol = 1e-08;
+	//do {
+		
+		//cout << "Iteration " << k << endl;
+		cblas_dsbmv(CblasColMajor,CblasUpper,N, k, 1/Re,A,Ldh,VortiInter,Inc,beta,RhsAns,Inc);
+		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_i,KLU_i,alpha_i,MatrixA_i,Ldh_MatrixA_i,
+						VortiInter,Inc,beta,LhsVortiAns_i,Inc);
+						
+		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_i,KLU_i,alpha_i,MatrixA_i,Ldh_MatrixA_i,
+						streamInter,Inc,beta,LhsStreamAns_i,Inc);
+						
+		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_j,KLU_j,alpha_j,MatrixA_j,Ldh_MatrixA_j,
+						VortiInter,Inc,beta,LhsStreamAns_j,Inc);
+						
+		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_j,KLU_j,alpha_j,MatrixA_j,Ldh_MatrixA_j,
+						streamInter,Inc,beta,LhsStreamAns_j,Inc);
+		
+		double *LHS_1 = new double[180];
+		double *LHS_2 = new double[180];
+		for(int i = 0; i < 180; ++i){
+			LHS_2[i] = 3;
+			LHS_1[i] = 2;
+		}
+		cblas_ddot(180,LHS_2,Inc,LHS_1,Inc); //LHS 1
+		
+		cout<<LHS_1[1]<<endl;
+		cout<<LHS_2[1]<<endl;
+		
+		cblas_ddot(N,LhsStreamAns_j,Inc,LhsVortiAns_i,Inc); //LHS 1
+		cblas_ddot(N,LhsStreamAns_i,Inc,LhsVortiAns_j,Inc); //LHS 2
+		cblas_daxpy(N, 1, RhsAns, 1, LhsVortiAns_i, 1);
+		cblas_daxpy(N, -1, LhsVortiAns_i, 1, LhsVortiAns_j, 1);
+		
+//		eps = cblas_dnrm2(N, r, 1);
+//        cout << "eps: " << sqrt(eps) << " tol=" << tol << endl;
+//        if (sqrt(eps) < tol) {
+//            break;
+//        }
+//		
+	//	k++;
+	//}while (k<500);
 	
 }
 
