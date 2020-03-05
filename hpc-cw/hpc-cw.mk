@@ -5,15 +5,15 @@
 ## Debug
 ProjectName            :=hpc-cw
 ConfigurationName      :=Debug
-WorkspacePath          :=/home/li/Desktop/hpc-lp
-ProjectPath            :=/home/li/Desktop/hpc-lp/hpc-cw
+WorkspacePath          :=/home/li/Desktop/hpc
+ProjectPath            :=/home/li/Desktop/hpc/hpc-cw
 IntermediateDirectory  :=./Debug
 OutDir                 := $(IntermediateDirectory)
 CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=li
-Date                   :=03/03/20
+Date                   :=05/03/20
 CodeLitePath           :=/home/li/.codelite
 LinkerName             :=g++
 SharedObjectLinkerName :=g++ -shared -fPIC
@@ -39,8 +39,8 @@ LinkOptions            :=
 IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch). 
 IncludePCH             := 
 RcIncludePath          := 
-Libs                   := 
-ArLibs                 :=  
+Libs                   := $(LibrarySwitch)blas $(LibrarySwitch)cblas 
+ArLibs                 :=  "blas" "cblas" 
 LibPath                := $(LibraryPathSwitch). 
 
 ##
@@ -92,7 +92,7 @@ PreBuild:
 ## Objects
 ##
 $(IntermediateDirectory)/LidDrivenCavitySolver.cpp$(ObjectSuffix): LidDrivenCavitySolver.cpp $(IntermediateDirectory)/LidDrivenCavitySolver.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/li/Desktop/hpc-lp/hpc-cw/LidDrivenCavitySolver.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/LidDrivenCavitySolver.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/li/Desktop/hpc/hpc-cw/LidDrivenCavitySolver.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/LidDrivenCavitySolver.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/LidDrivenCavitySolver.cpp$(DependSuffix): LidDrivenCavitySolver.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/LidDrivenCavitySolver.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/LidDrivenCavitySolver.cpp$(DependSuffix) -MM LidDrivenCavitySolver.cpp
 
@@ -100,7 +100,7 @@ $(IntermediateDirectory)/LidDrivenCavitySolver.cpp$(PreprocessSuffix): LidDriven
 	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/LidDrivenCavitySolver.cpp$(PreprocessSuffix) LidDrivenCavitySolver.cpp
 
 $(IntermediateDirectory)/LidDrivenCavity.cpp$(ObjectSuffix): LidDrivenCavity.cpp $(IntermediateDirectory)/LidDrivenCavity.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/li/Desktop/hpc-lp/hpc-cw/LidDrivenCavity.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/LidDrivenCavity.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/li/Desktop/hpc/hpc-cw/LidDrivenCavity.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/LidDrivenCavity.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/LidDrivenCavity.cpp$(DependSuffix): LidDrivenCavity.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/LidDrivenCavity.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/LidDrivenCavity.cpp$(DependSuffix) -MM LidDrivenCavity.cpp
 
