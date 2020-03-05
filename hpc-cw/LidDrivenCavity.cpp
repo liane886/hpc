@@ -228,8 +228,8 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* VortiInter,double* str
 	double *LhsStreamAns_j = new double[N];
 	double *LhsVortiAns_i = new double[N];
 	double *LhsVortiAns_j = new double[N];
-	
-	
+	double *LHS_1 = new double[N];
+	double *LHS_2 = new double[N];	
 	double det_y = 1.0/double (Ny-1);
 	double det_x = 1.0/double (Nx-1);
 	const int KLU_i = Ldh_MatrixA_i -2;  // sub-diagonal & super-diagonal
@@ -256,21 +256,14 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* VortiInter,double* str
 		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_j,KLU_j,alpha_j,MatrixA_j,Ldh_MatrixA_j,
 						streamInter,Inc,beta,LhsStreamAns_j,Inc);
 		
-		double *LHS_1 = new double[180];
-		double *LHS_2 = new double[180];
-		for(int i = 0; i < 180; ++i){
-			LHS_2[i] = 3;
-			LHS_1[i] = 2;
+		for (int i=0;i<N;i++){
+			LHS_1 [i]= LhsStreamAns_j[i]*LhsVortiAns_i[i];
+			LHS_2 [i]= LhsStreamAns_i[i]*LhsVortiAns_j[i];
 		}
-		cblas_ddot(180,LHS_2,Inc,LHS_1,Inc); //LHS 1
-		
-		cout<<LHS_1[1]<<endl;
-		cout<<LHS_2[1]<<endl;
-		
-		cblas_ddot(N,LhsStreamAns_j,Inc,LhsVortiAns_i,Inc); //LHS 1
-		cblas_ddot(N,LhsStreamAns_i,Inc,LhsVortiAns_j,Inc); //LHS 2
-		cblas_daxpy(N, 1, RhsAns, 1, LhsVortiAns_i, 1);
-		cblas_daxpy(N, -1, LhsVortiAns_i, 1, LhsVortiAns_j, 1);
+		double da = (det_x*det_x*det_y*det_y)/dt;
+		cblas_daxpy(N, 1, RhsAns, 1, LHS_2, 1);
+		cblas_daxpy(N, -1, LHS_1, 1, LHS_2, 1);
+		cblas_daxpy(N, da, VortiInter, 1, LHS_2, 1);
 		
 //		eps = cblas_dnrm2(N, r, 1);
 //        cout << "eps: " << sqrt(eps) << " tol=" << tol << endl;
