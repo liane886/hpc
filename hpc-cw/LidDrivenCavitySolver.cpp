@@ -38,6 +38,7 @@ int main(int argc, char **argv)
 	double *A = new double[(Nx-1)*(Ny-2)*(Nx-2)];
 	double *VortiInter = new double [(Ny-2)*(Nx-2)];
 	double *streamInter = new double[(Ny-2)*(Nx-2)];
+
     // Configure the solver here...
 	solver->SetDomainSize(1.0,1.0);
 	solver->SetGridSize(Nx,Ny);
@@ -55,6 +56,8 @@ int main(int argc, char **argv)
 //	cout<<omag[25761]<<endl;
 	solver->CalVorticityT(A,VortiInter,streamInter);
 	solver->CalVorticityTplus(A,VortiInter,streamInter);
+
+	cout <<endl;
 	delete A;
 	//delete b;
 

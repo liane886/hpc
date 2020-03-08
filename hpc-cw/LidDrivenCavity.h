@@ -42,6 +42,10 @@ private:
 	double* CalVI_y;
 	double* CalVI_x;
 	const int N = (Nx-2)*(Ny-2);  //the size of matrix A and array of inter vorticity & stream  
+//	double *LhsStreamAns_i = new double[N]; 
+//	double *LhsStreamAns_j = new double[N];
+//	double *LhsVortiAns_i = new double[N];
+//	double *LhsVortiAns_j = new double[N];
 //	double* vorticity = new double [Ny*Nx];
 //	double* stream = new double [Ny*Nx];
 //	double* CalV1_A = new double [(Ny-2)*(Nx-2)*(Ny-2)*(Nx-2)];
@@ -50,6 +54,7 @@ private:
 
 class Poisson
 {
+	
 private:
     double dt;
     double T;
@@ -61,4 +66,5 @@ public:
 	Poisson();
 	~Poisson();
 	void ComputeStreamFUnction();
+	
 };
