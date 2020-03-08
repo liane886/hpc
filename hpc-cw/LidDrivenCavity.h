@@ -19,9 +19,9 @@ public:
     void SetTimeStep(double deltat);
     void SetFinalTime(double finalt);
     void SetReynoldsNumber(double Re);
-    void Initialise(double* omag,double* fi);
+    void Initialise(double* omag,double* fi, double* S_i,double*S_j,double*V_i,double* V_j);
 	void CalVorticityT(double* A,double* VortiInter,double* streamInter);
-	void CalVorticityTplus(double* A, double* VortiInter,double* streamInter);
+	void CalVorticityTplus(double* A, double* VortiInter,double* streamInter,double* S_i,double*S_j,double*V_i,double* V_j);
 	
     void Integrate();
 
@@ -30,7 +30,6 @@ public:
 private:
     double* v = nullptr;
     double* s = nullptr;
-
     double dt;
     double T;
     int    Nx;
@@ -38,14 +37,15 @@ private:
     double Lx;
     double Ly;
     double Re;
-	double* CalVI_A; 
+	double* CalVI_A;
 	double* CalVI_y;
 	double* CalVI_x;
 	const int N = (Nx-2)*(Ny-2);  //the size of matrix A and array of inter vorticity & stream  
-//	double *LhsStreamAns_i = new double[N]; 
-//	double *LhsStreamAns_j = new double[N];
-//	double *LhsVortiAns_i = new double[N];
-//	double *LhsVortiAns_j = new double[N];
+	double *LhsVortiAns_i = nullptr;
+	double *LhsStreamAns_i = nullptr;
+	double *LhsVortiAns_j = nullptr;
+	double *LhsStreamAns_j = nullptr;
+	
 //	double* vorticity = new double [Ny*Nx];
 //	double* stream = new double [Ny*Nx];
 //	double* CalV1_A = new double [(Ny-2)*(Nx-2)*(Ny-2)*(Nx-2)];

@@ -80,7 +80,7 @@ void LidDrivenCavity::SetReynoldsNumber(double re)
 	Re = re;
 }
 
-void LidDrivenCavity::Initialise(double* omag, double* fi)
+void LidDrivenCavity::Initialise(double* omag, double* fi,double* S_i, double *S_j,double* V_i,double*V_j)
 {
 	v = omag;
 	s = fi;
@@ -102,7 +102,7 @@ void LidDrivenCavity::Initialise(double* omag, double* fi)
 	
 	
 	//Initialise boundary condition
-	for(int i=0; i<N; i++){
+	for(int i=0; i< N; i++){
 		if (i < Nx-2){
 			if (i == 0) omag[i] = leftBC[i]-bottomBC[i]; //Bottom	
 			if (i == Nx-3) omag[i] =leftBC[i] - topBC[i];//Bottom	
@@ -119,6 +119,25 @@ void LidDrivenCavity::Initialise(double* omag, double* fi)
 	}
 	
 	
+	for (int i=0; i<N; i++){
+		if (i% Nx-2 == 0){
+			V_i[i]  = bottomBC[i];			
+		}	
+		else if (i% Nx-2 ==1) {
+			V_i[i] = topBC[i];
+		}
+			
+	}
+	
+	for (int i = 0; i<N; i++){
+		if (i < Nx-2){
+			V_j[i] = leftBC[i];			
+		}	
+		else if (i > N-(Nx-2)-1) {
+			V_j[i] = rightBC[i];
+		}
+			
+	}
 	
 //	for(int i=0; i<Nx*Ny; i++){
 //		if (i < Nx){			
@@ -198,7 +217,7 @@ void LidDrivenCavity::CalVorticityT(double* A, double* omag,double* fi)
  *
  */
  
-void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi)
+void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double* S_i, double *S_j,double* V_i,double*V_j)
 {	
 	
 	const double beta = 0.0;
@@ -229,10 +248,8 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi)
 		}
 	}
 	double *RhsAns = new double [N]; // the answer of the right hand side of the equation 11
-	double *LhsStreamAns_i = new double[N]; 
-	double *LhsStreamAns_j = new double[N];
-	double *LhsVortiAns_i = new double[N];
-	double *LhsVortiAns_j = new double[N];
+
+	// Initialise bc
 	
 	
 	
@@ -251,33 +268,30 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi)
 	//double eps;
 	int counter = 0; //iteration counter
 	//double tol = 1e-08;
-	do {
+	//do {
 		
 		//cout << "Iteration " << k << endl;
 		cblas_dsbmv(CblasColMajor,CblasUpper,N, k, 1/Re,A,Ldh,omag,Inc,beta,RhsAns,Inc);
 		
 		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_i,KLU_i,alpha_i,MatrixA_i,Ldh_MatrixA_i,
-						omag,Inc,beta,LhsVortiAns_i,Inc);
+						omag,Inc,beta,V_i,Inc);
 						
 		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_i,KLU_i,alpha_i,MatrixA_i,Ldh_MatrixA_i,
-						fi,Inc,beta,LhsStreamAns_i,Inc);
+						fi,Inc,beta,S_i,Inc);
 						
 		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_j,KLU_j,alpha_j,MatrixA_j,Ldh_MatrixA_j,
-						omag,Inc,beta,LhsVortiAns_j,Inc);
+						omag,Inc,beta,V_j,Inc);
 						
 		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_j,KLU_j,alpha_j,MatrixA_j,Ldh_MatrixA_j,
-						fi,Inc,beta,LhsStreamAns_j,Inc);
+						fi,Inc,beta,S_j,Inc);
 		
 		for (int i=0;i<N;i++){
-			LHS_1 [i]= LhsStreamAns_j[i]*LhsVortiAns_i[i];
-			LHS_2 [i]= LhsStreamAns_i[i]*LhsVortiAns_j[i];
+			LHS_1 [i]= S_j[i]*V_i[i];
+			LHS_2 [i]= S_i[i]*V_j[i];
 		}
 		double da = (det_x*det_x*det_y*det_y)/dt;
 		cblas_daxpy(N, 1, RhsAns, 1, LHS_2, 1);
-			
-	for (int i=100;i<1888;++i){
-	cout<<LhsStreamAns_j[i]<<"  ";
-	}
+
 	
 		cblas_daxpy(N, -1, LHS_1, 1, LHS_2, 1);
 		cblas_daxpy(N, da, omag, 1, LHS_2, 1);
@@ -287,16 +301,19 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi)
 //        if (sqrt(eps) < tol) {
 //            break;
 //        }
-//		
+//					
+	for (int i=1;i<188;++i){
+	cout<<V_j[i]<<"  ";
+	}
 		counter++;
-	}while (counter<1000);
+	//}while (counter<1000);
 	
 	delete[] LHS_2;
 	delete[] LHS_1;
-	delete[] LhsStreamAns_j;
-	delete[] LhsStreamAns_i;
-	delete[] LhsVortiAns_i;
-	delete[] LhsVortiAns_j;
+	delete[] S_j;
+	delete[] S_i;
+	delete[] V_i;
+	delete[] V_j;
 	delete[] RhsAns;
 	
 }
