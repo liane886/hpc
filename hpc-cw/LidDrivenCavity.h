@@ -19,9 +19,9 @@ public:
     void SetTimeStep(double deltat);
     void SetFinalTime(double finalt);
     void SetReynoldsNumber(double Re);
-    void Initialise(double* omag,double* fi, double* S_i,double*S_j,double*V_i,double* V_j);
+    void Initialise(double* omag,double* fi,double*V_i,double* V_j);
 	void CalVorticityT(double* A,double* VortiInter,double* streamInter);
-	void CalVorticityTplus(double* A, double* VortiInter,double* streamInter,double* S_i,double*S_j,double*V_i,double* V_j);
+	void CalVorticityTplus(double* A, double* VortiInter,double* streamInter,double*V_i,double* V_j);
 	
     void Integrate();
 
@@ -42,29 +42,12 @@ private:
 	double* CalVI_x;
 	const int N = (Nx-2)*(Ny-2);  //the size of matrix A and array of inter vorticity & stream  
 	double *LhsVortiAns_i = nullptr;
-	double *LhsStreamAns_i = nullptr;
+	
 	double *LhsVortiAns_j = nullptr;
-	double *LhsStreamAns_j = nullptr;
+	
 	
 //	double* vorticity = new double [Ny*Nx];
 //	double* stream = new double [Ny*Nx];
 //	double* CalV1_A = new double [(Ny-2)*(Nx-2)*(Ny-2)*(Nx-2)];
 //	double* CalV1_b = new double [(Ny-2)*(Nx-2)];
-	};
-
-class Poisson
-{
-	
-private:
-    double dt;
-    double T;
-    int    Nx;
-    int    Ny;
-	double* v = nullptr;
-    double* s = nullptr;
-public: 
-	Poisson();
-	~Poisson();
-	void ComputeStreamFUnction();
-	
 };

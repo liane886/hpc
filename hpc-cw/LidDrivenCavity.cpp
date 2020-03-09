@@ -80,7 +80,7 @@ void LidDrivenCavity::SetReynoldsNumber(double re)
 	Re = re;
 }
 
-void LidDrivenCavity::Initialise(double* omag, double* fi,double* S_i, double *S_j,double* V_i,double*V_j)
+void LidDrivenCavity::Initialise(double* omag, double* fi,double* V_i,double*V_j)
 {
 	v = omag;
 	s = fi;
@@ -181,7 +181,7 @@ void LidDrivenCavity::CalVorticityT(double* A, double* omag,double* fi)
 			A[i*Ldh + Ldh-2] = det_x*det_x;
 			A[i*Ldh + Ldh-1] = 2*(det_y*det_y+det_x*det_x);
 		}
-		else if (i < N){
+		else {
 			if (i%(Ldh-1) == 0){
 				A[i*Ldh + Ldh-1] = 2*(det_y*det_y+det_x*det_x);
 				A[i*Ldh        ] = det_y*det_y;					
@@ -217,7 +217,7 @@ void LidDrivenCavity::CalVorticityT(double* A, double* omag,double* fi)
  *
  */
  
-void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double* S_i, double *S_j,double* V_i,double*V_j)
+void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double* V_i,double*V_j)
 {	
 	
 	const double beta = 0.0;
@@ -250,12 +250,8 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double
 	double *RhsAns = new double [N]; // the answer of the right hand side of the equation 11
 
 	// Initialise bc
-	
-	
-	
-	
-	
-	
+	double *S_i = new double[(Ny-2)*(Nx-2)];
+	double *S_j = new double[(Ny-2)*(Nx-2)];
 	double *LHS_1 = new double[N];
 	double *LHS_2 = new double[N];	
 	double det_y = Ly/double (Ny-1);
@@ -266,9 +262,9 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double
 	const double alpha_j = 0.5*det_y*det_x*det_x;
 
 	//double eps;
-	int counter = 0; //iteration counter
+	
 	//double tol = 1e-08;
-	//do {
+	
 		
 		//cout << "Iteration " << k << endl;
 		cblas_dsbmv(CblasColMajor,CblasUpper,N, k, 1/Re,A,Ldh,omag,Inc,beta,RhsAns,Inc);
@@ -301,21 +297,19 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double
 //        if (sqrt(eps) < tol) {
 //            break;
 //        }
-//					
-	for (int i=1;i<188;++i){
-	cout<<V_j[i]<<"  ";
+	//Initialise(omag,fi,V_i,V_j);
+
+					
+	for (int i=1;i<1888;++i){
+	cout<<LHS_2[i]<<"  ";
 	}
-		counter++;
-	//}while (counter<1000);
-	
 	delete[] LHS_2;
 	delete[] LHS_1;
 	delete[] S_j;
 	delete[] S_i;
 	delete[] V_i;
 	delete[] V_j;
-	delete[] RhsAns;
-	
+	delete[] RhsAns;	
 }
 
 void LidDrivenCavity::Integrate()

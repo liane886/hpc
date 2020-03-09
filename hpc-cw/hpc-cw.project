@@ -6,6 +6,8 @@
     <File Name="LidDrivenCavitySolver.cpp"/>
     <File Name="LidDrivenCavity.cpp"/>
     <File Name="LidDrivenCavity.h"/>
+    <File Name="Poisson.h"/>
+    <File Name="Poisson.cpp"/>
   </VirtualDirectory>
   <Settings Type="Executable">
     <GlobalSettings>

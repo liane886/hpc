@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=li
-Date                   :=08/03/20
+Date                   :=09/03/20
 CodeLitePath           :=/home/li/.codelite
 LinkerName             :=g++
 SharedObjectLinkerName :=g++ -shared -fPIC
@@ -60,7 +60,7 @@ AS       := as
 ## User defined environment variables
 ##
 CodeLiteDir:=/usr/share/codelite
-Objects0=$(IntermediateDirectory)/LidDrivenCavitySolver.cpp$(ObjectSuffix) $(IntermediateDirectory)/LidDrivenCavity.cpp$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/LidDrivenCavitySolver.cpp$(ObjectSuffix) $(IntermediateDirectory)/LidDrivenCavity.cpp$(ObjectSuffix) $(IntermediateDirectory)/Poisson.cpp$(ObjectSuffix) 
 
 
 
@@ -106,6 +106,14 @@ $(IntermediateDirectory)/LidDrivenCavity.cpp$(DependSuffix): LidDrivenCavity.cpp
 
 $(IntermediateDirectory)/LidDrivenCavity.cpp$(PreprocessSuffix): LidDrivenCavity.cpp
 	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/LidDrivenCavity.cpp$(PreprocessSuffix) LidDrivenCavity.cpp
+
+$(IntermediateDirectory)/Poisson.cpp$(ObjectSuffix): Poisson.cpp $(IntermediateDirectory)/Poisson.cpp$(DependSuffix)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/li/Desktop/hpc/hpc-cw/Poisson.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/Poisson.cpp$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/Poisson.cpp$(DependSuffix): Poisson.cpp
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/Poisson.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/Poisson.cpp$(DependSuffix) -MM Poisson.cpp
+
+$(IntermediateDirectory)/Poisson.cpp$(PreprocessSuffix): Poisson.cpp
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/Poisson.cpp$(PreprocessSuffix) Poisson.cpp
 
 
 -include $(IntermediateDirectory)/*$(DependSuffix)
