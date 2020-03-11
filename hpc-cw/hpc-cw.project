@@ -3,12 +3,12 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
-    <File Name="LidDrivenCavitySolver.cpp"/>
-    <File Name="LidDrivenCavity.cpp"/>
-    <File Name="LidDrivenCavity.h"/>
-    <File Name="Poisson.h"/>
-    <File Name="Poisson.cpp"/>
     <File Name="data.txt"/>
+    <File Name="O-LidDrivenCavity.cpp"/>
+    <File Name="O-LidDrivenCavity.h"/>
+    <File Name="O-LidDrivenCavitySolver.cpp"/>
+    <File Name="OPoisson.cpp"/>
+    <File Name="OPoisson.h"/>
   </VirtualDirectory>
   <Settings Type="Executable">
     <GlobalSettings>
@@ -104,4 +104,6 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>

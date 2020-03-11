@@ -1,6 +1,6 @@
 #include <cstdlib>
 #include <cmath>
-#include "Poisson.h"
+#include "OPoisson.h"
 #include <fstream>
 #include <iomanip>
 #include "/home/li/Desktop/header/cblas/CBLAS/include/cblas.h"
@@ -49,7 +49,7 @@ void Poisson::ComputeStreamFunction(double* fi, double* omag,double* A2){
 	int N = (Nx-2)*(Ny-2);
 	double det_y = Ly/double (Ny-1);
 	double det_x = Lx/double (Nx-1);
-	cout<<det_x<<endl;
+	cout<<det_x*det_x<<endl;
 	//const int N = (Nx-2)*(Ny-2);    // 	Matrix dimension
 	const int Ldh = 3*Nx+1;       // leading diamention
 	int ld = 2*(Nx-2);
@@ -64,7 +64,7 @@ void Poisson::ComputeStreamFunction(double* fi, double* omag,double* A2){
 			A2[i*Ldh + ld   ] = - 2*(det_y*det_y+det_x*det_x);
 			A2[i*Ldh + ld -1] = - det_x*det_x;
 		}
-		else {
+		else  {
 			if (i%(Nx-2) == 0){
 				A2[i*Ldh + ld  ] = - 2*(det_y*det_y+det_x*det_x);
 				A2[i*Ldh + Nx-2] = - det_y*det_y;	
@@ -93,14 +93,19 @@ void Poisson::ComputeStreamFunction(double* fi, double* omag,double* A2){
 	int* ipiv = new int[N];
 	int info;
 	double* r = new double[N];
+
 	cblas_dcopy(N, omag, 1, r, 1);   // r_0 = b (i.e. omag)
+	
+
 	F77NAME(dgbsv)(N,KUL,KUL,1,A2,Ldh,ipiv,r,N,info);	
 	cblas_dcopy(N, r, 1, fi, 1);   // fi = x (i.e. r)
+	
 	if (info != 0){
 		cout <<"ERROR: An error occurred in DGBSV:"<<endl;
 		cout<<info<<endl;
 	}
 	
+
 	
 //	ofstream stream;
 //	stream.open("/home/li/Desktop/hpc/hpc-cw/data.txt",ios::trunc);

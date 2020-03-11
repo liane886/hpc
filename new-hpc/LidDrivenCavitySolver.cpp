@@ -2,8 +2,9 @@
 #include <fstream>
 using namespace std;
 
-#include "Poisson.h"
+//#include "Poisson.h"
 #include "LidDrivenCavity.h"
+#include "Poisson.h"
 
 /*
  * • What the program does (name, author, date and description).
@@ -29,75 +30,59 @@ using namespace std;
 // 
 
 int main(int argc, char **argv)
-{
-    // Create a new instance of the LidDrivenCavity class
+{	
 	
-    LidDrivenCavity* solver = new LidDrivenCavity();
-	Poisson* Psolver = new Poisson();
 	int Nx = 161;
 	int Ny = 161;
 	int NumberofPoints = (Nx-2)*(Ny-2);
 	double xlen = 1.0;
 	double ylen = 1.0;
 	double Re = 200.0;
-	double T = Re*Nx*Ny/4.0;
-	double dt = 0.0001;
-	double *omag = new double [(Ny-2)*(Nx-2)];
-	double *fi = new double [(Ny-2)*(Nx-2)];
-	//fi = {};
-	double *A = new double[(Nx-1)*(Ny-2)*(Nx-2)];
-	double *A2 = new double[(3*Nx+1)*(Ny-2)*(Nx-2)];
+	double T = 1;
+	double dt = 0.0005;
+    // Create a new instance of the LidDrivenCavity class
+	
+    LidDrivenCavity* solver = new LidDrivenCavity (dt, T,  Nx, Ny, xlen, ylen, Re);
+	
+
 	//double *VortiInter = new double [(Ny-2)*(Nx-2)];
-	//double *streamInter = new double[(Ny-2)*(Nx-2)];
-	//double *S_i = new double[(Ny-2)*(Nx-2)];
-	//double *S_j = new double[(Ny-2)*(Nx-2)];
-	double *V_i = new double[(Ny-2)*(Nx-2)];
-	double *V_j = new double[(Ny-2)*(Nx-2)];
 	
     // Configure the solver here...
 	solver->SetDomainSize(xlen,ylen);
-	Psolver->SetDomainSize(xlen,ylen);
+	
 	solver->SetGridSize(Nx,Ny,NumberofPoints);
-	Psolver->SetGridSize(Nx,Ny);
+	
 	solver->SetReynoldsNumber(Re);
 	solver->SetTimeStep(dt);
-	solver->SetFinalTime(T);
-	int counter = 0; //iteration counter
-	
-	do{		
+	solver->SetFinalTime(T);			
 		
-	solver->Initialise(omag,fi,V_i,V_j);
+	solver->Initialise();
+ // Run the solver
+    solver->Integrate();
 	
-	solver->CalVorticityT(A,omag,fi);
+//////////////////////////////////////////IO
+//	int Ldh = 3*Nx+1;
+//	for(int i =0;i<2*Nx;++i){
+//		for (int j =0;j<2*Nx; ++j){
+//			cout<<A[j*Ldh+i]<<" ";
+//		}
+//			cout<<endl;
+//	
+//	}
 
-	solver->CalVorticityTplus(A,omag,fi,V_i,V_j);
-
-	Psolver->ComputeStreamFunction(fi,omag,A2);
-	
-	cout<<counter<<endl;
-	counter++;
-	}while(counter<21);
-	
 	
 //	ofstream stream;
 //	stream.open("/home/li/Desktop/hpc/hpc-cw/data.txt");
-//	for(int i =0;i<(Ny-2)*(Nx-2);++i){
-//		stream<<fi[i];
+//	int Ldh = 3*Nx+1;
+//	for(int i =0;i<(Nx-1);++i){
+//		for (int j =0;j<(Nx-2)*(Ny-2); ++j){
+//		stream<<A[j*(Nx-1)+i];
 //		stream<<" ";
+//		}
+//		stream<<"\n";
 //	}
-	//stream.close();
-
-	
-	delete [] A;
-	delete [] omag;
-	delete [] fi;
-	delete [] A2;
-	delete [] V_j;
-	delete [] V_i;
-	
-
-    // Run the solver
-    solver->Integrate();
+//	stream.close();
+ 
 
 	return 0;
 }

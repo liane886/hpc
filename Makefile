@@ -1,8 +1,8 @@
 .PHONY: clean All
 
 All:
-	@echo "----------Building project:[ hpc-cw - Debug ]----------"
-	@cd "hpc-cw" && "$(MAKE)" -f  "hpc-cw.mk"
+	@echo "----------Building project:[ new-hpc - Debug ]----------"
+	@cd "new-hpc" && "$(MAKE)" -f  "new-hpc.mk"
 clean:
-	@echo "----------Cleaning project:[ hpc-cw - Debug ]----------"
-	@cd "hpc-cw" && "$(MAKE)" -f  "hpc-cw.mk" clean
+	@echo "----------Cleaning project:[ new-hpc - Debug ]----------"
+	@cd "new-hpc" && "$(MAKE)" -f  "new-hpc.mk" clean
