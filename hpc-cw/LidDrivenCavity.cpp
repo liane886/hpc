@@ -29,16 +29,11 @@ LidDrivenCavity::LidDrivenCavity()
      Ly = 0.0;
      Re = 0.0;
 	 dt = 0.0;
+	 N = 0;
 	 v = {};
 	 s = {};
 	 CalVI_A = {};
-//	 v = new double [(Nx-2)*(Ny-2)];
-//	 s = new double [(Nx-2)*(Ny-2)];
-//	 CalVI_A = new double[(Nx-1)*(Ny-2)*(Nx-2)];
-//	 CalVI_x = new double [(Nx-2)*(Ny-2)];
-//	 CalVI_y = new double [(Nx-2)*(Ny-2)];
-	 //-------------------------------- CalV1_A[(Ny-2)*(Nx-2)*(Ny-2)*(Nx-2)] = {};
-	 //-------------------------------- CalV1_b[(Ny-2)*(Nx-2)] = {};
+	 BCforV_i = {};
 	 cout << "Object is being created" << endl;
 }
 
@@ -63,10 +58,11 @@ void LidDrivenCavity::SetDomainSize(double xlen, double ylen)
 
 }
 
-void LidDrivenCavity::SetGridSize(int nx, int ny)
+void LidDrivenCavity::SetGridSize(int nx, int ny,int NumberofPoints)
 {
 	Nx = nx;
 	Ny = ny;
+	N = NumberofPoints;
 }
 
 void LidDrivenCavity::SetTimeStep(double deltat)
@@ -88,10 +84,12 @@ void LidDrivenCavity::Initialise(double* omag, double* fi,double* V_i,double*V_j
 {
 	v = omag;
 	s = fi;
-	double* topBC = new double[Nx-2];
-	double* bottomBC = new double[Nx-2];
-	double* leftBC = new double[Nx-2];
-	double* rightBC = new double[Nx-2];
+	BCforV_i = V_i;
+	BCforV_j = V_j;
+	//double* topBC = new double[Nx-2];
+	//double* bottomBC = new double[Nx-2];
+	//double* leftBC = new double[Nx-2];
+	//double* rightBC = new double[Nx-2];
 	double U = 1.0;
 	double det_y = Ly/double (Ny-1);
 	double det_x = Lx/double (Nx-1);
@@ -104,44 +102,111 @@ void LidDrivenCavity::Initialise(double* omag, double* fi,double* V_i,double*V_j
 //		rightBC [i]= (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x));
 //	}
 	
-	
+
 	//Initialise boundary condition
-	for(int i=0; i< N; i++){
+	for (int i=0; i< N; i++){
+		
 		if (i < Nx-2){
-			if (i == 0) omag[i] = (fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x))-(fi[i]-fi[i+1])*(2.0/(det_y*det_y)); //Bottom	
-			if (i == Nx-3) omag[i] =(fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x)) -  fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);//Bottom	
-			else omag[i] = (fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x));
-			}	
-		if (i == Nx-2) omag[i] = (fi[i]-fi[i+1])*(2.0/(det_y*det_y));
-		if (i == (Nx-2)*(Ny-3)) omag[i] = fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);
-		if (i >  (Nx-2)*(Ny-3)){
-			if (i ==  (Nx-2)*(Ny-3) +1) omag [i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x)) - (fi[i]-fi[i+1])*(2.0/(det_y*det_y));
-			if(i == N-1) omag[i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x)) - fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);
-			else omag[i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x));
-		}
+			if (i == 0) {
+				omag[i] = 1; //Bottom	
+				
+			}
+			else if (i == Nx-3) {
+				omag[i] =1;//Bottom	
+				//cout<<"11111111111111111"<<endl;
+			}
+			else {
+				omag[i] = 1;
+				//cout<<i<<endl;
+			}
 			
-	}
-	
-	
-	for (int i=0; i<N; i++){
-		if (i% Nx-2 == 0){
-			V_i[i]  = (fi[i]-fi[i+1])*(2.0/(det_y*det_y));			
 		}	
-		else if (i% Nx-2 ==1) {
-			V_i[i] = fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);
+		else if (i == Nx-2) {
+			
+			omag[i] = 1;
 		}
+		else if (i == (Nx-2)*(Ny-3)) {
+			omag[i] = 1;
+		}
+		else if (i >  (Nx-2)*(Ny-3)){
+			
+			 if (i ==  (Nx-2)*(Ny-3) +1){
+				 omag [i] =1;
+			 }
+			else if(i == N-1) {
+				omag[i] = 1;
+			}
+			else {
+				omag[i] = 1;
+			}
+		}
+		else omag[i] = 0;
 			
 	}
+			
+	for (int i=0; i<N; i++){
+		
+		if (i  == 0){
+			V_i[i]  = 1;			
+		}	
+		else if (i ==1) {
+			V_i[i] = 1;
+			//cout<<i<<endl;
+		}
+		
+		else V_i [i] = 0;	
+	}
+	
 	
 	for (int i = 0; i<N; i++){
+		
 		if (i < Nx-2){
-			V_j[i] = (fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x));			
+			V_j[i] = 1;			
 		}	
 		else if (i > N-(Nx-2)-1) {
-			V_j[i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x));
+			V_j[i] =1;
 		}
+		else V_j[i] = 0;
 			
 	}
+//	for (int i=0; i< N; i++){
+//		if (i < Nx-2){
+//			if (i == 0) omag[i] = (fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x))-(fi[i]-fi[i+1])*(2.0/(det_y*det_y)); //Bottom	
+//			if (i == Nx-3) omag[i] =(fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x)) -  fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);//Bottom	
+//			else omag[i] = (fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x));
+//			}	
+//		if (i == Nx-2) omag[i] = (fi[i]-fi[i+1])*(2.0/(det_y*det_y));
+//		if (i == (Nx-2)*(Ny-3)) omag[i] = fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);
+//		if (i >  (Nx-2)*(Ny-3)){
+//			if (i ==  (Nx-2)*(Ny-3) +1) omag [i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x)) - (fi[i]-fi[i+1])*(2.0/(det_y*det_y));
+//			if(i == N-1) omag[i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x)) - fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);
+//			else omag[i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x));
+//		}
+//			
+//	}
+//	for (int i=0; i<N; i++){
+//		if (i% Nx-2 == 0){
+//			V_i[i]  = (fi[i]-fi[i+1])*(2.0/(det_y*det_y));			
+//		}	
+//		else if (i% Nx-2 ==1) {
+//			V_i[i] = fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);
+//		}
+//			
+//	}
+//	
+//	for (int i = 0; i<N; i++){
+//		if (i < Nx-2){
+//			V_j[i] = (fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x));			
+//		}	
+//		else if (i > N-(Nx-2)-1) {
+//			V_j[i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x));
+//		}
+//			
+//	}
+
+
+
+
 	
 //	for(int i=0; i<Nx*Ny; i++){
 //		if (i < Nx){			
@@ -310,8 +375,8 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double
 	delete[] LHS_1;
 	delete[] S_j;
 	delete[] S_i;
-	delete[] V_i;
-	delete[] V_j;
+	//delete[] V_i;
+	//delete[] V_j;
 	delete[] RhsAns;	
 }
 

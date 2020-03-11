@@ -2,7 +2,7 @@
 #include <cmath>
 #include "Poisson.h"
 #include <fstream>
-#include <iostream>
+#include <iomanip>
 #include "/home/li/Desktop/header/cblas/CBLAS/include/cblas.h"
 #define F77NAME(x) x##_
 
@@ -26,12 +26,9 @@ Poisson::Poisson(){
 	Pv = {};
 	Ps = {};
 	PoissonMA = {};
-//	Pv = new double [(Nx-2)*(Nx-2)];
-//	Ps = new double [(Nx-2)*(Nx-2)];
-//	PoissonMA =  new double[(3*Nx+1)*(Ny-2)*(Nx-2)];
 }
 Poisson::~Poisson(){
-	
+	cout<<"object is being deleted"<<endl;
 }
 
 void Poisson::SetGridSize(int nx, int ny)
@@ -83,14 +80,14 @@ void Poisson::ComputeStreamFunction(double* fi, double* omag,double* A2){
 		}				
     }
 	
-    cout.precision(4);
-    for (int i = 0; i < Ldh; ++i) {
-        for (int j = 0; j < N; ++j) {
-            cout << setw(6) << A2[j*ldh+i] << " ";
-        }
-        cout << endl;
-    }
-    cout << endl;
+//    cout.precision(4);
+//    for (int i = 0; i < Ldh; ++i) {
+//        for (int j = 0; j < N; ++j) {
+//            cout << setw(6) << A2[j*Ldh+i] << " ";
+//        }
+//        cout << endl;
+//    }
+//    cout << endl;
 	
 	int KUL = Nx-2;
 	int* ipiv = new int[N];

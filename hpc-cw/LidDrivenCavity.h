@@ -15,7 +15,7 @@ public:
     ~LidDrivenCavity();
 
     void SetDomainSize(double xlen, double ylen);
-    void SetGridSize(int nx, int ny);
+    void SetGridSize(int nx, int ny,int n);
     void SetTimeStep(double deltat);
     void SetFinalTime(double finalt);
     void SetReynoldsNumber(double Re);
@@ -37,10 +37,12 @@ private:
     double Lx;
     double Ly;
     double Re;
-	double* CalVI_A;
-	double* CalVI_y;
-	double* CalVI_x;
-	const int N = (Nx-2)*(Ny-2);  //the size of matrix A and array of inter vorticity & stream  
+	double* CalVI_A = nullptr;
+	//double* CalVI_y;
+	//double* CalVI_x;
+	double* BCforV_i = nullptr;
+	double* BCforV_j = nullptr;
+	int N;  //the size of matrix A and array of inter vorticity & stream  
 	double *LhsVortiAns_i = nullptr;
 	
 	double *LhsVortiAns_j = nullptr;

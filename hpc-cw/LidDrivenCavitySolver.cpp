@@ -36,6 +36,7 @@ int main(int argc, char **argv)
 	Poisson* Psolver = new Poisson();
 	int Nx = 161;
 	int Ny = 161;
+	int NumberofPoints = (Nx-2)*(Ny-2);
 	double xlen = 1.0;
 	double ylen = 1.0;
 	double Re = 200.0;
@@ -56,27 +57,26 @@ int main(int argc, char **argv)
     // Configure the solver here...
 	solver->SetDomainSize(xlen,ylen);
 	Psolver->SetDomainSize(xlen,ylen);
-	solver->SetGridSize(Nx,Ny);
+	solver->SetGridSize(Nx,Ny,NumberofPoints);
 	Psolver->SetGridSize(Nx,Ny);
 	solver->SetReynoldsNumber(Re);
 	solver->SetTimeStep(dt);
 	solver->SetFinalTime(T);
 	int counter = 0; //iteration counter
 	
-	//do{	
-	
-	cout<<"123"<<endl;
-	
+	do{		
+		
 	solver->Initialise(omag,fi,V_i,V_j);
 	
 	solver->CalVorticityT(A,omag,fi);
-	
+
 	solver->CalVorticityTplus(A,omag,fi,V_i,V_j);
-	cout<<"1234"<<endl;
+
 	Psolver->ComputeStreamFunction(fi,omag,A2);
-	cout<<"12345555"<<endl;
+	
+	cout<<counter<<endl;
 	counter++;
-	//}while(counter<50);
+	}while(counter<21);
 	
 	
 //	ofstream stream;
@@ -92,11 +92,12 @@ int main(int argc, char **argv)
 	delete [] omag;
 	delete [] fi;
 	delete [] A2;
+	delete [] V_j;
+	delete [] V_i;
 	
-	//delete b;
 
     // Run the solver
-   // solver->Integrate();
+    solver->Integrate();
 
 	return 0;
 }
