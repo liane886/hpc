@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <cmath>
+#include <fstream>
 //#include "cblas.h"
 #include "/home/li/Desktop/header/cblas/CBLAS/include/cblas.h"
 //#include "cblas_f77.h"
@@ -28,9 +29,9 @@ LidDrivenCavity::LidDrivenCavity()
      Ly = 0.0;
      Re = 0.0;
 	 dt = 0.0;
-	 v = new double [Nx*Nx];
-	 s = new double [Nx*Nx];
-	 CalVI_A = new double;
+	 v = new double [(Nx-2)*(Ny-2)];
+	 s = new double [(Nx-2)*(Ny-2)];
+	 CalVI_A = new double[(Nx-1)*(Ny-2)*(Nx-2)];
 	 CalVI_x = new double [(Nx-2)*(Ny-2)];
 	 CalVI_y = new double [(Nx-2)*(Ny-2)];
 	 //-------------------------------- CalV1_A[(Ny-2)*(Nx-2)*(Ny-2)*(Nx-2)] = {};
@@ -168,8 +169,6 @@ void LidDrivenCavity::CalVorticityT(double* A, double* omag,double* fi)
 {
 	
 	CalVI_A = A;	
-	//CalVI_x = VortiInter;
-	//CalVI_y = streamInter;
 //generate matrix A 
 	double det_y = Ly/double (Ny-1);
 	double det_x = Lx/double (Nx-1);
@@ -189,7 +188,8 @@ void LidDrivenCavity::CalVorticityT(double* A, double* omag,double* fi)
 			else {
 				A[i*Ldh + Ldh-1] = 2*(det_y*det_y+det_x*det_x);	
 				A[i*Ldh + Ldh-2] = det_x*det_x;
-				A[i*Ldh        ] = det_y*det_y;						
+				A[i*Ldh        ] = det_y*det_y;	
+				
 			}
 		}				
     }	
@@ -219,24 +219,24 @@ void LidDrivenCavity::CalVorticityT(double* A, double* omag,double* fi)
  
 void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double* V_i,double*V_j)
 {	
-	
+	//double *A2 = new double[(3*Nx+1)*(Ny-2)*(Nx-2)];
 	const double beta = 0.0;
 	const int Inc = 1; 	
 	const int Ldh = Nx-1;
 	const int k = Ldh -2;			
 	// build the martix A to solve W_(i+1,j) - W_(i+1,j) using y = A* W
-	double *MatrixA_i = new double[N*(Nx-1)];
+	double *MatrixA_i = new double[N*3];
 	const int Ldh_MatrixA_i = 3;	
 	MatrixA_i[2] = -1;
 	for (int i = 1; i < N; ++i) {
 		if (i%(Ldh-1) != 0){
-			A[i*Ldh_MatrixA_i    ] =  1;
-			A[i*Ldh_MatrixA_i + 2] = -1;				
+			MatrixA_i[i*Ldh_MatrixA_i    ] =  1;
+			MatrixA_i[i*Ldh_MatrixA_i + 2] = -1;				
 		}				
     }
 	// build the martix A to solve W_(i,j+1) - W_(i,j-1) using y = A* W
-	double *MatrixA_j = new double[N*(Nx-1)];
 	const int Ldh_MatrixA_j = 2*(Nx-1)-1;
+	double *MatrixA_j = new double[N*Ldh_MatrixA_j];
 	MatrixA_j[159] = -1;
 	for (int i = 1; i < N; ++i) {
 		if (i < Nx-2){			
@@ -250,8 +250,10 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double
 	double *RhsAns = new double [N]; // the answer of the right hand side of the equation 11
 
 	// Initialise bc
-	double *S_i = new double[(Ny-2)*(Nx-2)];
-	double *S_j = new double[(Ny-2)*(Nx-2)];
+	double *S_i = new double[N];
+	S_i = {};
+	double *S_j = new double[N];
+	S_j = {};
 	double *LHS_1 = new double[N];
 	double *LHS_2 = new double[N];	
 	double det_y = Ly/double (Ny-1);
@@ -267,9 +269,9 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double
 	
 		
 		//cout << "Iteration " << k << endl;
-		cblas_dsbmv(CblasColMajor,CblasUpper,N, k, 1/Re,A,Ldh,omag,Inc,beta,RhsAns,Inc);
+		cblas_dsbmv(CblasColMajor,CblasUpper,N, k, 1/Re,A,Ldh,omag,Inc,beta,RhsAns,Inc);  //calculate  right hand side 
 		
-		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_i,KLU_i,alpha_i,MatrixA_i,Ldh_MatrixA_i,
+		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_i,KLU_i,alpha_i,MatrixA_i,Ldh_MatrixA_i, //
 						omag,Inc,beta,V_i,Inc);
 						
 		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_i,KLU_i,alpha_i,MatrixA_i,Ldh_MatrixA_i,
@@ -281,17 +283,26 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double
 		cblas_dgbmv(CblasColMajor,CblasNoTrans,N,N,KLU_j,KLU_j,alpha_j,MatrixA_j,Ldh_MatrixA_j,
 						fi,Inc,beta,S_j,Inc);
 		
+				
+		double da = (det_x*det_x*det_y*det_y);
 		for (int i=0;i<N;i++){
-			LHS_1 [i]= S_j[i]*V_i[i];
-			LHS_2 [i]= S_i[i]*V_j[i];
+			LHS_2 [i] = dt*(RhsAns[i]- S_j[i]*V_i[i]+ S_i[i]*V_j[i]) + da*omag[i];
 		}
-		double da = (det_x*det_x*det_y*det_y)/dt;
-		cblas_daxpy(N, 1, RhsAns, 1, LHS_2, 1);
+
+		//cblas_daxpy(N, 1, RhsAns, 1, LHS_2, 1);
 
 	
-		cblas_daxpy(N, -1, LHS_1, 1, LHS_2, 1);
-		cblas_daxpy(N, da, omag, 1, LHS_2, 1);
-		cblas_dswap(N,omag,Inc,LHS_2,Inc);
+		//cblas_daxpy(N, -1, LHS_1, 1, LHS_2, 1);
+		//cblas_daxpy(N, da, omag, 1, LHS_2, 1);
+	cblas_dswap(N,omag,Inc,LHS_2,Inc);
+//	ofstream stream;
+//	stream.open("/home/li/Desktop/hpc/hpc-cw/data.txt");
+//	for(int i =0;i<(Ny-2)*(Nx-2);++i){
+//		stream<<omag[i];
+//		stream<<" ";
+//	}
+//	stream.close();
+	
 //		eps = cblas_dnrm2(N, r, 1);
 //        cout << "eps: " << sqrt(eps) << " tol=" << tol << endl;
 //        if (sqrt(eps) < tol) {
@@ -299,10 +310,7 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double
 //        }
 	//Initialise(omag,fi,V_i,V_j);
 
-					
-	for (int i=1;i<1888;++i){
-	cout<<LHS_2[i]<<"  ";
-	}
+
 	delete[] LHS_2;
 	delete[] LHS_1;
 	delete[] S_j;

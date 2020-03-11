@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 #include "Poisson.h"
@@ -41,13 +42,13 @@ int main(int argc, char **argv)
 	double dt = 0.0001;
 	double *omag = new double [(Ny-2)*(Nx-2)];
 	double *fi = new double [(Ny-2)*(Nx-2)];
-	
+	//fi = {};
 	double *A = new double[(Nx-1)*(Ny-2)*(Nx-2)];
-	double *A2 = new double[(2*Nx+1)*(Ny-2)*(Nx-2)];
-	double *VortiInter = new double [(Ny-2)*(Nx-2)];
-	double *streamInter = new double[(Ny-2)*(Nx-2)];
-	double *S_i = new double[(Ny-2)*(Nx-2)];
-	double *S_j = new double[(Ny-2)*(Nx-2)];
+	double *A2 = new double[(3*Nx+1)*(Ny-2)*(Nx-2)];
+	//double *VortiInter = new double [(Ny-2)*(Nx-2)];
+	//double *streamInter = new double[(Ny-2)*(Nx-2)];
+	//double *S_i = new double[(Ny-2)*(Nx-2)];
+	//double *S_j = new double[(Ny-2)*(Nx-2)];
 	double *V_i = new double[(Ny-2)*(Nx-2)];
 	double *V_j = new double[(Ny-2)*(Nx-2)];
 	
@@ -59,28 +60,37 @@ int main(int argc, char **argv)
 	solver->SetReynoldsNumber(Re);
 	solver->SetTimeStep(dt);
 	solver->SetFinalTime(T);
-	
-	
-    solver->Initialise(omag, fi,V_i,V_j);
-	//cout<<omag[162];
-	//cout<<"....";
-	//cout<<omag[323]<<endl;
-//	cout<<omag[161];
-//	cout<<"....";
-//	cout<<omag[322];
-//	cout<<"....";
-//	cout<<omag[25761]<<endl;
-	solver->CalVorticityT(A,VortiInter,streamInter);
-	solver->CalVorticityTplus(A,VortiInter,streamInter,V_i,V_j);
-	Psolver->ComputeStreamFunction(fi,omag,A2);
 	int counter = 0; //iteration counter
+	cout<<"123"<<endl;
+	//do{		
+	solver->Initialise(omag,fi,V_i,V_j);
+	cout<<"123333"<<endl;
+	solver->CalVorticityT(A,omag,fi);
+	
+	solver->CalVorticityTplus(A,omag,fi,V_i,V_j);
+	Psolver->ComputeStreamFunction(fi,omag,A2);
+	//counter++;
+	//}while(counter<50);
+	
+	
+//	ofstream stream;
+//	stream.open("/home/li/Desktop/hpc/hpc-cw/data.txt");
+//	for(int i =0;i<(Ny-2)*(Nx-2);++i){
+//		stream<<fi[i];
+//		stream<<" ";
+//	}
+	//stream.close();
 
 	
-	delete A;
+	delete [] A;
+	delete [] omag;
+	delete [] fi;
+	delete [] A2;
+	
 	//delete b;
 
     // Run the solver
-    solver->Integrate();
+   // solver->Integrate();
 
 	return 0;
 }

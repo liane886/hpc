@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Workspace Name="hpc-lp" Database="" Version="10.0.0">
   <Project Name="hpc-cw" Path="hpc-cw/hpc-cw.project" Active="Yes"/>
+  <Project Name="111" Path="111/111.project" Active="No"/>
+  <Project Name="band" Path="band/band.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Environment/>
       <Project Name="hpc-cw" ConfigName="Debug"/>
+      <Project Name="111" ConfigName="Debug"/>
+      <Project Name="band" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Release" Selected="yes">
       <Environment/>
       <Project Name="hpc-cw" ConfigName="Release"/>
+      <Project Name="111" ConfigName="Release"/>
+      <Project Name="band" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>
