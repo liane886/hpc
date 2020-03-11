@@ -31,6 +31,7 @@ using namespace std;
 int main(int argc, char **argv)
 {
     // Create a new instance of the LidDrivenCavity class
+	
     LidDrivenCavity* solver = new LidDrivenCavity();
 	Poisson* Psolver = new Poisson();
 	int Nx = 161;
@@ -61,15 +62,20 @@ int main(int argc, char **argv)
 	solver->SetTimeStep(dt);
 	solver->SetFinalTime(T);
 	int counter = 0; //iteration counter
+	
+	//do{	
+	
 	cout<<"123"<<endl;
-	//do{		
+	
 	solver->Initialise(omag,fi,V_i,V_j);
-	cout<<"123333"<<endl;
+	
 	solver->CalVorticityT(A,omag,fi);
 	
 	solver->CalVorticityTplus(A,omag,fi,V_i,V_j);
+	cout<<"1234"<<endl;
 	Psolver->ComputeStreamFunction(fi,omag,A2);
-	//counter++;
+	cout<<"12345555"<<endl;
+	counter++;
 	//}while(counter<50);
 	
 	

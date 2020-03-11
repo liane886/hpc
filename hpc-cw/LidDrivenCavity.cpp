@@ -29,11 +29,14 @@ LidDrivenCavity::LidDrivenCavity()
      Ly = 0.0;
      Re = 0.0;
 	 dt = 0.0;
-	 v = new double [(Nx-2)*(Ny-2)];
-	 s = new double [(Nx-2)*(Ny-2)];
-	 CalVI_A = new double[(Nx-1)*(Ny-2)*(Nx-2)];
-	 CalVI_x = new double [(Nx-2)*(Ny-2)];
-	 CalVI_y = new double [(Nx-2)*(Ny-2)];
+	 v = {};
+	 s = {};
+	 CalVI_A = {};
+//	 v = new double [(Nx-2)*(Ny-2)];
+//	 s = new double [(Nx-2)*(Ny-2)];
+//	 CalVI_A = new double[(Nx-1)*(Ny-2)*(Nx-2)];
+//	 CalVI_x = new double [(Nx-2)*(Ny-2)];
+//	 CalVI_y = new double [(Nx-2)*(Ny-2)];
 	 //-------------------------------- CalV1_A[(Ny-2)*(Nx-2)*(Ny-2)*(Nx-2)] = {};
 	 //-------------------------------- CalV1_b[(Ny-2)*(Nx-2)] = {};
 	 cout << "Object is being created" << endl;
@@ -94,27 +97,27 @@ void LidDrivenCavity::Initialise(double* omag, double* fi,double* V_i,double*V_j
 	double det_x = Lx/double (Nx-1);
 	
 	
-	for (int i=0; i<Nx-2; i++){
-		topBC[i] = fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);
-		bottomBC[i] = (fi[i]-fi[i+1])*(2.0/(det_y*det_y));
-		leftBC [i]=  (fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x));
-		rightBC [i]= (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x));
-	}
+//	for (int i=0; i<Nx-2; i++){
+//		topBC[i] = fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);
+//		bottomBC[i] = (fi[i]-fi[i+1])*(2.0/(det_y*det_y));
+//		leftBC [i]=  (fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x));
+//		rightBC [i]= (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x));
+//	}
 	
 	
 	//Initialise boundary condition
 	for(int i=0; i< N; i++){
 		if (i < Nx-2){
-			if (i == 0) omag[i] = leftBC[i]-bottomBC[i]; //Bottom	
-			if (i == Nx-3) omag[i] =leftBC[i] - topBC[i];//Bottom	
-			else omag[i] = leftBC[i];
+			if (i == 0) omag[i] = (fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x))-(fi[i]-fi[i+1])*(2.0/(det_y*det_y)); //Bottom	
+			if (i == Nx-3) omag[i] =(fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x)) -  fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);//Bottom	
+			else omag[i] = (fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x));
 			}	
-		if (i == Nx-2) omag[i] = bottomBC[i];
-		if (i == (Nx-2)*(Ny-3)) omag[i] = topBC[i];
+		if (i == Nx-2) omag[i] = (fi[i]-fi[i+1])*(2.0/(det_y*det_y));
+		if (i == (Nx-2)*(Ny-3)) omag[i] = fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);
 		if (i >  (Nx-2)*(Ny-3)){
-			if (i ==  (Nx-2)*(Ny-3) +1) omag [i] = rightBC[i] -bottomBC[i];
-			if(i == N-1) omag[i] = rightBC[i] - topBC[i];
-			else omag[i] = rightBC[i];
+			if (i ==  (Nx-2)*(Ny-3) +1) omag [i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x)) - (fi[i]-fi[i+1])*(2.0/(det_y*det_y));
+			if(i == N-1) omag[i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x)) - fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);
+			else omag[i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x));
 		}
 			
 	}
@@ -122,20 +125,20 @@ void LidDrivenCavity::Initialise(double* omag, double* fi,double* V_i,double*V_j
 	
 	for (int i=0; i<N; i++){
 		if (i% Nx-2 == 0){
-			V_i[i]  = bottomBC[i];			
+			V_i[i]  = (fi[i]-fi[i+1])*(2.0/(det_y*det_y));			
 		}	
 		else if (i% Nx-2 ==1) {
-			V_i[i] = topBC[i];
+			V_i[i] = fi[i]-fi[i-1]*(2.0/(det_y*det_y)) - (2.0*U/det_y);
 		}
 			
 	}
 	
 	for (int i = 0; i<N; i++){
 		if (i < Nx-2){
-			V_j[i] = leftBC[i];			
+			V_j[i] = (fi[i]-fi[i+2*(Nx-2-i)+1])*(2.0/(det_x*det_x));			
 		}	
 		else if (i > N-(Nx-2)-1) {
-			V_j[i] = rightBC[i];
+			V_j[i] = (fi[i]-fi[N-2*(Nx-2)+1+(N-i)])*(2/(det_x*det_x));
 		}
 			
 	}
@@ -235,9 +238,10 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double
 		}				
     }
 	// build the martix A to solve W_(i,j+1) - W_(i,j-1) using y = A* W
-	const int Ldh_MatrixA_j = 2*(Nx-1)-1;
+	const int Ldh_MatrixA_j = 2*(Nx-2)+1;
 	double *MatrixA_j = new double[N*Ldh_MatrixA_j];
-	MatrixA_j[159] = -1;
+	
+	MatrixA_j[Ldh_MatrixA_j-1] = -1;
 	for (int i = 1; i < N; ++i) {
 		if (i < Nx-2){			
 			MatrixA_j[i*Ldh_MatrixA_j + Ldh_MatrixA_j-1] = -1;	
@@ -251,9 +255,7 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double
 
 	// Initialise bc
 	double *S_i = new double[N];
-	S_i = {};
-	double *S_j = new double[N];
-	S_j = {};
+	double *S_j = new double[N];	
 	double *LHS_1 = new double[N];
 	double *LHS_2 = new double[N];	
 	double det_y = Ly/double (Ny-1);
@@ -295,14 +297,7 @@ void LidDrivenCavity::CalVorticityTplus(double* A,double* omag,double* fi,double
 		//cblas_daxpy(N, -1, LHS_1, 1, LHS_2, 1);
 		//cblas_daxpy(N, da, omag, 1, LHS_2, 1);
 	cblas_dswap(N,omag,Inc,LHS_2,Inc);
-//	ofstream stream;
-//	stream.open("/home/li/Desktop/hpc/hpc-cw/data.txt");
-//	for(int i =0;i<(Ny-2)*(Nx-2);++i){
-//		stream<<omag[i];
-//		stream<<" ";
-//	}
-//	stream.close();
-	
+
 //		eps = cblas_dnrm2(N, r, 1);
 //        cout << "eps: " << sqrt(eps) << " tol=" << tol << endl;
 //        if (sqrt(eps) < tol) {

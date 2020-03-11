@@ -1,7 +1,8 @@
 #include <cstdlib>
 #include <cmath>
 #include "Poisson.h"
-
+#include <fstream>
+#include <iostream>
 #include "/home/li/Desktop/header/cblas/CBLAS/include/cblas.h"
 #define F77NAME(x) x##_
 
@@ -22,9 +23,12 @@ extern "C" {
 Poisson::Poisson(){
 	Nx = 0;
 	Ny = 0; 
-	Pv = new double [(Nx-2)*(Nx-2)];
-	Ps = new double [(Nx-2)*(Nx-2)];
-	PoissonMA =  new double[(3*Nx+1)*(Ny-2)*(Nx-2)];
+	Pv = {};
+	Ps = {};
+	PoissonMA = {};
+//	Pv = new double [(Nx-2)*(Nx-2)];
+//	Ps = new double [(Nx-2)*(Nx-2)];
+//	PoissonMA =  new double[(3*Nx+1)*(Ny-2)*(Nx-2)];
 }
 Poisson::~Poisson(){
 	
@@ -48,6 +52,7 @@ void Poisson::ComputeStreamFunction(double* fi, double* omag,double* A2){
 	int N = (Nx-2)*(Ny-2);
 	double det_y = Ly/double (Ny-1);
 	double det_x = Lx/double (Nx-1);
+	cout<<det_x<<endl;
 	//const int N = (Nx-2)*(Ny-2);    // 	Matrix dimension
 	const int Ldh = 3*Nx+1;       // leading diamention
 	int ld = 2*(Nx-2);
@@ -56,6 +61,7 @@ void Poisson::ComputeStreamFunction(double* fi, double* omag,double* A2){
 	A2[Ldh-1] = det_y*det_y;
 	for (int i = 1; i < N; ++i) {
 		if (i < Nx-2){	
+			//A2[i*Ldh + Ldh-1] = 1;
 			A2[i*Ldh + Ldh-1] = - det_y*det_y;
 			A2[i*Ldh + ld +1] = - det_x*det_x;
 			A2[i*Ldh + ld   ] = - 2*(det_y*det_y+det_x*det_x);
@@ -75,7 +81,17 @@ void Poisson::ComputeStreamFunction(double* fi, double* omag,double* A2){
 				A2[i*Ldh + Ldh-1] = - det_y*det_y;				
 			}
 		}				
-    }	
+    }
+	
+    cout.precision(4);
+    for (int i = 0; i < Ldh; ++i) {
+        for (int j = 0; j < N; ++j) {
+            cout << setw(6) << A2[j*ldh+i] << " ";
+        }
+        cout << endl;
+    }
+    cout << endl;
+	
 	int KUL = Nx-2;
 	int* ipiv = new int[N];
 	int info;
@@ -87,6 +103,15 @@ void Poisson::ComputeStreamFunction(double* fi, double* omag,double* A2){
 		cout <<"ERROR: An error occurred in DGBSV:"<<endl;
 		cout<<info<<endl;
 	}
+	
+	
+//	ofstream stream;
+//	stream.open("/home/li/Desktop/hpc/hpc-cw/data.txt",ios::trunc);
+//	for(int i =0;i<N;++i){
+//		stream<<r[i];
+//		stream<<" ";
+//	}
+//	stream.close();
 	
 	
 	
