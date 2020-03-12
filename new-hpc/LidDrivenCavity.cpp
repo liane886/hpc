@@ -24,7 +24,7 @@ extern "C" {
 LidDrivenCavity::LidDrivenCavity(double dt,double T, int Nx,int Ny,double Lx, double Ly,double Re)
 {	 
      this ->T = 0.0;
-     this -> Nx = 0;
+     this ->Nx = 0;
 	 this ->Ny = 0;
      this ->Lx = 0.0;
      this ->Ly = 0.0;
@@ -119,7 +119,12 @@ void LidDrivenCavity::Initialise()
 	F77NAME(dcopy)(Ny*Nx, v, 1, vorticity_inter, 1); 
 	Psolver = new Poisson();	
 	Psolver -> SetDomainSize(Lx,Ly);
+	
 	Psolver -> SetGridSize(Nx,Ny);
+	//cout<<"123"<<endl;
+	
+//	Psolver -> buildMA();
+	//Psolver -> PPTRF();
 }
 
 /**  Solve inter vortisity 
@@ -149,8 +154,7 @@ void LidDrivenCavity::Initialise()
 	}
 	F77NAME(dcopy)(Ny*Nx, vorticity_inter, 1, v, 1);
 	
-	
-	//Psolver -> ComputeStreamFunction(this->s,this->v);
+	Psolver -> SolvePoisson(this->s,this->v);
 	counter +=1;
 	cout<<counter<<endl;
 	

@@ -11,14 +11,19 @@ private:
     int    Ny;
 	double Lx;
     double Ly;
-	double* PoissonMA = nullptr;
-	double* Pv = nullptr;
-    double* Ps = nullptr;
+	double* A = nullptr; // PoissonMatrixA
+	double beta[3];
+	int N;
+	double det_y;
+	double det_x;
 	
 public: 
 	Poisson();
 	~Poisson();
-	void ComputeStreamFunction(double* fi, double* omag);
-	void SetGridSize (int nx,int ny);
+	//void Initialize(int& Nx,int& Ny);
+	void buildMA();
+	void PPTRF();
+	void SolvePoisson(double* s,double*v);
+	void SetGridSize (int& Nx,int& Ny);
 	void SetDomainSize (double xlen,double ylen);
 };
