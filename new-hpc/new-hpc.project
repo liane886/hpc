@@ -8,6 +8,7 @@
     <File Name="LidDrivenCavity.h"/>
     <File Name="Poisson.h"/>
     <File Name="Poisson.cpp"/>
+    <File Name="test.txt"/>
   </VirtualDirectory>
   <Settings Type="Executable">
     <GlobalSettings>
@@ -24,9 +25,9 @@
         <IncludePath Value="."/>
       </Compiler>
       <Linker Options="" Required="yes">
-        <Library Value="lapack"/>
-        <Library Value="cblas"/>
         <Library Value="blas"/>
+        <Library Value="cblas"/>
+        <Library Value="lapack"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>

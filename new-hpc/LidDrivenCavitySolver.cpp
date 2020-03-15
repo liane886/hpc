@@ -40,6 +40,7 @@ int main(int argc, char **argv)
 	double Re = 200.0;
 	double T = 1;
 	double dt = 0.0005;
+	//int N = (Nx-2)*(Ny-2);
     // Create a new instance of the LidDrivenCavity class
 	
     LidDrivenCavity* solver = new LidDrivenCavity (dt, T,  Nx, Ny, xlen, ylen, Re);
@@ -60,6 +61,7 @@ int main(int argc, char **argv)
  // Run the solver
     solver->Integrate();
 	
+
 //////////////////////////////////////////IO
 //	int Ldh = 3*Nx+1;
 //	for(int i =0;i<2*Nx;++i){

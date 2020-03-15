@@ -22,8 +22,8 @@ public:
     void SetReynoldsNumber(double Re);
     void Initialise();
 	void CalVorticityT(double alpha,double* vorticity_inter,double* s);
-	void CalVorticityTplus( double* v,double* s);
-	
+	void CalVorticityTplus( double* v,double* s,double* vorticity_inter);
+	void BoundaryCondition();
     void Integrate();
 
     // Add any other public functions

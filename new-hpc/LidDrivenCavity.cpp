@@ -7,7 +7,7 @@
 
 //#include "cblas.h"
 //#include "/home/li/Desktop/header/cblas/CBLAS/include/cblas.h"
-//#include "cblas_f77.h"
+
 
 
 // This tells the C++ compiler to use C-style naming of symbols for these
@@ -23,17 +23,16 @@ extern "C" {
 }
 LidDrivenCavity::LidDrivenCavity(double dt,double T, int Nx,int Ny,double Lx, double Ly,double Re)
 {	 
-     this ->T = 0.0;
-     this ->Nx = 0;
-	 this ->Ny = 0;
-     this ->Lx = 0.0;
-     this ->Ly = 0.0;
-     this ->Re = 0.0;
-	 this ->dt = 0.0;
-	 this ->N = 0;
-	 this ->v = {};
-	 this ->s = {};
-	 this ->vorticity_inter = {};
+     this ->T = T;
+     this ->Nx = Nx;
+	 this ->Ny = Ny;
+     this ->Lx = Lx;
+     this ->Ly = Ly;
+     this ->Re = Re;
+	 this ->dt = dt;
+	 //this ->N = N;
+	
+	// this ->vorticity_inter = {};
 	 cout << "Object is being created" << endl;
 }
 
@@ -42,9 +41,9 @@ LidDrivenCavity::LidDrivenCavity(double dt,double T, int Nx,int Ny,double Lx, do
 LidDrivenCavity::~LidDrivenCavity()
 {
 	cout << "Object is being deleted" << endl;	// print information
-	delete[]v;
-	delete[]vorticity_inter;
-	delete[]s;
+//	delete[]v;
+	//delete[]vorticity_inter;
+//	delete[]s;
 	
 }
 
@@ -89,19 +88,31 @@ void LidDrivenCavity::Initialise()
 	this ->v = new double[Nx*Ny]{};
 	this ->s = new double[Nx*Ny]{};
 	this ->vorticity_inter = new double[Nx*Ny]{};
+
+
+	//Initialise boundary condition
+	this->BoundaryCondition();
+        
+
+	Psolver = new Poisson();	
+	Psolver -> SetDomainSize(Lx,Ly);
+	
+	Psolver -> PInitialise(Nx,Ny);
+
+}
+
+void LidDrivenCavity:: BoundaryCondition(){
 	double U = 1.0;
 	double det_y = Ly/double (Ny-1);
 	double det_x = Lx/double (Nx-1);
-
-	//Initialise boundary condition
-    //  Column major with [+ve y-direction -> down , +ve x-direction -> right]
+	 //  Column major with [+ve y-direction -> down , +ve x-direction -> right]
 //Bottom BC
 	for (int i = 0; i < this -> Nx; i++){
-		v[i*Ny] = (s[i]-s[i+1])*(2.0/(det_y*det_y)); 
+		v[i*Ny] = (s[i*(Ny)]-s[i*(Ny)+1])*(2.0/(det_y*det_y)); 
 	}
 //top BC			
 	for (int i = 0; i < this -> Nx ; i++){ 
-		v[(i+1)*Ny - 1] = s[(i+1)*Ny - 1]-s[(i+1)*Ny - 2]*(2.0/(det_y*det_y)) - (2.0*U/det_y);  	
+		v[(i+1)*Ny - 1] = (s[(i+1)*Ny - 1]-s[(i+1)*Ny - 2])*(2.0/(det_y*det_y)) - (2.0*U/det_y);  	
 	}
 			
 			
@@ -113,20 +124,10 @@ void LidDrivenCavity::Initialise()
 //right BC
        
 	for (int i = 0; i < this -> Ny; i++){
-		v[i + (Nx - 1)*Ny] = (s[i + (Nx - 1)*Ny]-s[i + (Nx - 2)*Ny])*(2/(det_x*det_x));
+		v[i + (Nx - 1)*Ny] = (s[i + (Nx - 1)*Ny]-s[i + (Nx - 2)*Ny])*(2.0/(det_x*det_x));
 	}
         
-	F77NAME(dcopy)(Ny*Nx, v, 1, vorticity_inter, 1); 
-	Psolver = new Poisson();	
-	Psolver -> SetDomainSize(Lx,Ly);
-	
-	Psolver -> SetGridSize(Nx,Ny);
-	//cout<<"123"<<endl;
-	
-//	Psolver -> buildMA();
-	//Psolver -> PPTRF();
 }
-
 /**  Solve inter vortisity 
  * @brief Solve inter vortisity by y = A*x --> y    && using cblas-dsbmv (band& symmetric matrix)
  * @param 		A 			Matrix  A in the equation y = A*x 
@@ -139,45 +140,51 @@ void LidDrivenCavity::Initialise()
 	double t = 0.0;
 	int counter =0;
 	cout<<T<<endl;
-	do{
+	//do{
 		
-	Initialise();
 	
-	CalVorticityT(-1.0,this->v,this->s);	
+	CalVorticityT(-1.0,this->v,this->s);
+	cout<<v[180]<<endl;	//Initialise();	
 	
+	// solve interior vorticity at t+dt
+	F77NAME(dcopy)(Ny*Nx, v, 1, vorticity_inter, 1); 
+			
 	CalVorticityT(dt/Re,vorticity_inter,v);
-	CalVorticityTplus(v,s);
-	for (int i=1; i < Nx-1; i++ ){
-		for (int j=1; j< Ny -1; j++){
-			vorticity_inter[ j + Ny*i ] += v[ j + Ny*i ];
-		}
-	}
+
+	CalVorticityTplus(v,s,vorticity_inter);
+	
 	F77NAME(dcopy)(Ny*Nx, vorticity_inter, 1, v, 1);
 	
-	Psolver -> SolvePoisson(this->s,this->v);
+	
+	for (int k = 0; k < 6; k++ ){
+	Psolver -> SolvePoisson(s,v);
+	}
 	counter +=1;
 	cout<<counter<<endl;
 	
-	
+	//update bc
+	BoundaryCondition();
+
 	t += dt;
-	}while(t<T);
+	//}while(t<T);
 	
 	ofstream stream;
 	stream.open("/home/li/Desktop/hpc/new-hpc/test.txt");
-	
-//	for(int i =0;i<Nx*Ny;++i){
-//		//for(int j =0; j<Ny;++j){
-//			stream<<v[i];
-//			//stream<<" ";
-//		//}
-//		stream<<"\n";
-//	}
-//	stream.close();
+	//stream<<"998"<<endl;
+	for(int i =0;i<Nx*Ny;++i){
+		//for(int j =0; j<Ny;++j){
+			
+			stream<<s[i]<<endl;
+			//stream<<" ";
+		//}
+		
+	}
+	stream.close();
 	
 }
 
 
-void LidDrivenCavity::CalVorticityT(double alpha, double* vorticity_inter,double* x)
+void LidDrivenCavity::CalVorticityT(double alpha, double* y,double* x)
 {
 		
 //generate matrix A 
@@ -186,7 +193,7 @@ void LidDrivenCavity::CalVorticityT(double alpha, double* vorticity_inter,double
 	
 	for (int i=1; i < Nx-1; i++){
 		for (int j=1; j< Ny-1; j++){
-			vorticity_inter[ j + Ny*i ] = alpha*(( x[(j+1) + Ny*i] - 2.0*x[j + Ny*i] + x[(j-1) + Ny*i] )/(det_y*det_y) +
+			y[ j + Ny*i ] = alpha*(( x[(j+1) + Ny*i] - 2.0*x[j + Ny*i] + x[(j-1) + Ny*i] )/(det_y*det_y) +
                                 ( x[j + Ny*(i+1)] - 2.0*x[j + Ny*i] + x[j + Ny*(i-1)] )/(det_x*det_x));
 		}
 	}
@@ -200,7 +207,7 @@ void LidDrivenCavity::CalVorticityT(double alpha, double* vorticity_inter,double
  *
  */
  
-void LidDrivenCavity::CalVorticityTplus(double* v,double* s)
+void LidDrivenCavity::CalVorticityTplus(double* v,double* s,double*vorticity_inter)
 {	
 	double det_y = Ly/double (Ny-1);
 	double det_x = Lx/double (Nx-1);
@@ -209,9 +216,9 @@ void LidDrivenCavity::CalVorticityTplus(double* v,double* s)
 	
 	for (int i=1; i < Nx-1; i++ ){
             for (int j=1; j< Ny-1; j++){
-			v[j + Ny*i] += dt*(beta_i*(s[j + Ny*(i+1)]-s[j + Ny*(i-1)])*beta_j*(v[(j+1) + Ny*i] - v[(j-1) + Ny*i]) -
+			vorticity_inter [j + Ny*i] += dt*(beta_i*(s[j + Ny*(i+1)]-s[j + Ny*(i-1)])*beta_j*(v[(j+1) + Ny*i] - v[(j-1) + Ny*i]) -
 							beta_j*(s[(j+1) + Ny*i] - s[(j-1) + Ny*i])*beta_i*(v[j + Ny*(i+1)] - v[j + Ny*(i-1)]))
-								+ v[j+Ny*i];
+								+v[j+Ny*i];
             }
 	}
 

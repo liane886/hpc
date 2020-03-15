@@ -24,6 +24,6 @@ public:
 	void buildMA();
 	void PPTRF();
 	void SolvePoisson(double* s,double*v);
-	void SetGridSize (int& Nx,int& Ny);
+	void PInitialise (int& Nx,int& Ny);
 	void SetDomainSize (double xlen,double ylen);
 };
