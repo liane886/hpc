@@ -9,6 +9,7 @@
     <File Name="O-LidDrivenCavitySolver.cpp"/>
     <File Name="OPoisson.cpp"/>
     <File Name="OPoisson.h"/>
+    <File Name="Poisson_LU.cpp"/>
   </VirtualDirectory>
   <Settings Type="Executable">
     <GlobalSettings>

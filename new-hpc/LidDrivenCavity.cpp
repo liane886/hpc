@@ -140,11 +140,11 @@ void LidDrivenCavity:: BoundaryCondition(){
 	double t = 0.0;
 	int counter =0;
 	cout<<T<<endl;
-	//do{
+	do{
 		
 	
 	CalVorticityT(-1.0,this->v,this->s);
-	cout<<v[180]<<endl;	//Initialise();	
+	//cout<<v[180]<<endl;	//Initialise();	
 	
 	// solve interior vorticity at t+dt
 	F77NAME(dcopy)(Ny*Nx, v, 1, vorticity_inter, 1); 
@@ -166,7 +166,7 @@ void LidDrivenCavity:: BoundaryCondition(){
 	BoundaryCondition();
 
 	t += dt;
-	//}while(t<T);
+	}while(t<T);
 	
 	ofstream stream;
 	stream.open("/home/li/Desktop/hpc/new-hpc/test.txt");

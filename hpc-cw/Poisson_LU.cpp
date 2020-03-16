@@ -55,10 +55,9 @@ void Poisson::PInitialise(int& Nx, int& Ny)
 	this->N = (this->Nx)*(this->Ny);
 	det_y = Ly/double (Ny+1);
 	det_x = Lx/double (Nx+1);
-	this->beta[1] = -1/(det_y*det_y);
-	this->beta[2] = -1/(det_x*det_x);
-	this->beta[0] = 2*(1/(det_y*det_y)+1/(det_x*det_x));
-
+	this->beta[0] = 2*(det_x*det_x+det_y*det_y);
+	this->beta[1] = -det_y*det_y;
+	this->beta[2] = -det_x*det_x;
 	A = new double[N*(this->Ny+1)]{};
 	
 	this ->buildMA();
@@ -73,21 +72,41 @@ void Poisson::SetDomainSize(double xlen, double ylen){
 void Poisson::buildMA(){
 
 	//generate matrix A;
-	int Ud = Ny +1;
-	
-	A[Ny] = beta[0];
-	for (int i = 1; i < N; ++i) {		
-		A[Ud*(i+1)-1] = beta[0]; // diagonal
-		
-		if (i >= Ny-1) {
-			A[(i+1)*Ud] = beta[1];  //super-diagonal
-		}	
 
-		if (i % Ny != 0){
-			A[(i+1)*Ud -2] = beta[2];  //sub-diagonal
-		}
-	}
 	
+int N = (Nx-2)*(Ny-2);
+	double det_y = Ly/double (Ny-1);
+	double det_x = Lx/double (Nx-1);
+	//cout<<det_x*det_x<<endl;
+	//const int N = (Nx-2)*(Ny-2);    // 	Matrix dimension
+	const int Ldh = 3*Nx+1;       // leading diamention
+	int ld = 2*(Nx-2);
+	A[ld   ] = 2*(det_y*det_y+det_x*det_x);
+	A[ld +1] = det_x*det_x;
+	A[Ldh-1] = det_y*det_y;
+	for (int i = 1; i < N; ++i) {
+		if (i < Nx-2){	
+			//A2[i*Ldh + Ldh-1] = 1;
+			A[i*Ldh + Ldh-1] = - det_y*det_y;
+			A[i*Ldh + ld +1] = - det_x*det_x;
+			A[i*Ldh + ld   ] = - 2*(det_y*det_y+det_x*det_x);
+			A[i*Ldh + ld -1] = - det_x*det_x;
+		}
+		else  {
+			if (i%(Nx-2) == 0){
+				A[i*Ldh + ld  ] = - 2*(det_y*det_y+det_x*det_x);
+				A[i*Ldh + Nx-2] = - det_y*det_y;	
+				A[i*Ldh + Ldh-1] = - det_y*det_y;				
+			}
+			else {
+				A[i*Ldh + ld   ] = - 2*(det_y*det_y+det_x*det_x);	
+				A[i*Ldh + ld -1] = - det_x*det_x;
+				A[i*Ldh + Nx-2 ] = - det_y*det_y;
+				A[i*Ldh + ld +1] = - det_x*det_x;		
+				A[i*Ldh + Ldh-1] = - det_y*det_y;				
+			}
+		}				
+    }
    
 ///////////////////////////////////////////////////IO 	
 //    cout.precision(4);
@@ -117,58 +136,23 @@ void Poisson::SolvePoisson(double* s,double*v){
 
 	
 	double* vCopy = new double[N]{};  // update vorticity vector	     
-	//fill_n(vCopy,N,0.0);
+	fill_n(vCopy,N,0.0);
 	int counter = Ny + 2;
-
-//	
-	        // Populate vorticity forcing values
-        for (int i = 1; i<Nx+1; i++){
-			for (int j=1;j<Ny+1;j++){
-				int counter1 = 0;
-				vCopy[(j-1)*Nx+i-1] = v[i*(Ny+2)+j];
-				counter1+=1; 
-			}
-        }
-
- //F77NAME(dcopy) (Ny, &v[counter*(i+1) + 1], 1, &vCopy[i*Ny], 1);
-
-        // Populate streamfunction BC values x-direction
-        F77NAME(daxpy) (Ny, -beta[2], &s[1], 1, vCopy, 1);
-        F77NAME(daxpy) (Ny, -beta[2], &s[counter*(Nx+1) + 1], 1, &vCopy[Ny*(Nx-1)], 1);
-
-        // Populate streamfunction BC values y-direction
-        F77NAME(daxpy) (Nx, -beta[1], &s[Ny +2], (Ny + 2), vCopy, Ny);
-        F77NAME(daxpy) (Nx, -beta[1], &s[2*(Ny +2) - 1], (Ny + 2), &vCopy[Ny-1], Ny);
-
-
-//for (int j = 0;j<Ny;j++){
-//for (int i = 0;i<Nx;i++){
-//	cout<<setw(8)<<setprecision(3)<<v[j*Ny+i]<<" ";
-//}	
-//cout<<endl;
-//}
-
-		int info;
-// Solve linear system with LAPACK:
-     // Packed storage, Banded  definite matrix
-		F77NAME(dpbtrs) ('U', N, Ny,1, A,Ny+1,vCopy, N, info);
-	// Position solution back in streamfunction array
+	int KUL = Nx-2;
+	int* ipiv = new int[N];
+	int info;
 	
-        for (int i = 1; i<Nx+1; i++){
-			for (int j=1;j<Ny+1;j++){
-				int counter1 = 0;
-				  s[i*(Ny+2)+j] = vCopy[(j-1)*Nx+i-1];
-				counter1+=1; 
-			}
-        }
+	cblas_dcopy(N, v, 1, vCopy, 1);   // r_0 = b (i.e. omag)
+	
 
-		
-//delete[]vCopy;
+	F77NAME(dgbsv)(N,KUL,KUL,1,A2,Ldh,ipiv,r,N,info);	
+	cblas_dcopy(N, r, 1, fi, 1);   // fi = x (i.e. r)
+	
+	if (info != 0){
+		cout <<"ERROR: An error occurred in DGBSV:"<<endl;
+		cout<<info<<endl;
+	}
 
-//	if (info != 0){
-//		cout <<"ERROR: An error occurred :"<<endl;
-//		cout<<info<<endl;
-//	}
 
 
 }
