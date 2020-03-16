@@ -35,8 +35,6 @@ extern "C" {
                             const double* b, const int& ldb,
                             int& info);
 
-
-    
 }
 
 Poisson::Poisson(){
@@ -62,7 +60,7 @@ void Poisson::PInitialise(int& Nx, int& Ny)
 	A = new double[N*(this->Ny+1)]{};
 	
 	this ->buildMA();
-	this ->PPTRF();
+	this ->CholeskyFactorzation();
 }
 
 void Poisson::SetDomainSize(double xlen, double ylen){
@@ -102,9 +100,9 @@ void Poisson::buildMA(){
 	
 }
 
-void Poisson::PPTRF(){
+void Poisson::CholeskyFactorzation(){
 	int info;
-	
+	//conpute Cholesky factoration
 	F77NAME(dpbtrf)('U', N,Ny,A,Ny+1,info);
 	if (info != 0){
 		cout <<"ERROR: An error occurred in dpptrf:";
@@ -115,60 +113,49 @@ void Poisson::PPTRF(){
 
 void Poisson::SolvePoisson(double* s,double*v){
 
-	
 	double* vCopy = new double[N]{};  // update vorticity vector	     
-	//fill_n(vCopy,N,0.0);
+	fill_n(vCopy,N,0.0);
 	int counter = Ny + 2;
 
-//	
-	        // Populate vorticity forcing values
-        for (int i = 1; i<Nx+1; i++){
-			for (int j=1;j<Ny+1;j++){
-				int counter1 = 0;
-				vCopy[(j-1)*Nx+i-1] = v[i*(Ny+2)+j];
-				counter1+=1; 
-			}
+	// set the vorticity vector for interial vorticity (length:(Nx-2)*(Ny-2))
+//        for (int i = 1; i<Nx+1; i++){
+//			for (int j=1;j<Ny+1;j++){
+//				int counter1 = 0;
+//				vCopy[counter1] = v[i*(Ny+2)+j];
+//				counter1+=1; 
+//			}
+//        }
+
+      for (int i = 0; i<Nx; i++){
+            F77NAME(dcopy) (Ny, &v[counter*(i+1) + 1], 1, &vCopy[i*Ny], 1);
         }
-
- //F77NAME(dcopy) (Ny, &v[counter*(i+1) + 1], 1, &vCopy[i*Ny], 1);
-
-        // Populate streamfunction BC values x-direction
-        F77NAME(daxpy) (Ny, -beta[2], &s[1], 1, vCopy, 1);
-        F77NAME(daxpy) (Ny, -beta[2], &s[counter*(Nx+1) + 1], 1, &vCopy[Ny*(Nx-1)], 1);
-
-        // Populate streamfunction BC values y-direction
-        F77NAME(daxpy) (Nx, -beta[1], &s[Ny +2], (Ny + 2), vCopy, Ny);
-        F77NAME(daxpy) (Nx, -beta[1], &s[2*(Ny +2) - 1], (Ny + 2), &vCopy[Ny-1], Ny);
-
-
-//for (int j = 0;j<Ny;j++){
-//for (int i = 0;i<Nx;i++){
-//	cout<<setw(8)<<setprecision(3)<<v[j*Ny+i]<<" ";
-//}	
-//cout<<endl;
-//}
+		
+//        // Populate streamfunction BC values x-direction
+//        F77NAME(daxpy) (Ny, -beta[2], &s[1], 1, vCopy, 1);
+//        F77NAME(daxpy) (Ny, -beta[2], &s[counter*(Nx+1) + 1], 1, &vCopy[Ny*(Nx-1)], 1);
+//
+//        // Populate streamfunction BC values y-direction
+//        F77NAME(daxpy) (Nx, -beta[1], &s[Ny +2], (Ny + 2), vCopy, Ny);
+//        F77NAME(daxpy) (Nx, -beta[1], &s[2*(Ny +2) - 1], (Ny + 2), &vCopy[Ny-1], Ny);
+//
 
 		int info;
 // Solve linear system with LAPACK:
-     // Packed storage, Banded  definite matrix
+     // solve the linear equaiton A*x=B with a symmertric positive define band matrix A 
+	 //using Cholesky factorization A computed by DPBTRF.
 		F77NAME(dpbtrs) ('U', N, Ny,1, A,Ny+1,vCopy, N, info);
-	// Position solution back in streamfunction array
-	
-        for (int i = 1; i<Nx+1; i++){
-			for (int j=1;j<Ny+1;j++){
-				int counter1 = 0;
-				  s[i*(Ny+2)+j] = vCopy[(j-1)*Nx+i-1];
-				counter1+=1; 
-			}
-        }
-
 		
-//delete[]vCopy;
+	// Position solution back in streamfunction array	
+      for (int i = 0; i<Nx; i++){
+            F77NAME(dcopy) (Ny,&vCopy[i*Ny] , 1, &s[counter*(i+1) + 1], 1);
+        }
+		
+delete[]vCopy;
 
-//	if (info != 0){
-//		cout <<"ERROR: An error occurred :"<<endl;
-//		cout<<info<<endl;
-//	}
+	if (info != 0){
+		cout <<"ERROR: An error occurred in DPBTRS:"<<endl;
+		cout<<info<<endl;
+	}
 
 
 }

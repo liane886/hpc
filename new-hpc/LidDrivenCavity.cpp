@@ -156,9 +156,9 @@ void LidDrivenCavity:: BoundaryCondition(){
 	F77NAME(dcopy)(Ny*Nx, vorticity_inter, 1, v, 1);
 	
 	
-	for (int k = 0; k < 6; k++ ){
+	//for (int k = 0; k < 6; k++ ){
 	Psolver -> SolvePoisson(s,v);
-	}
+	//}
 	counter +=1;
 	cout<<counter<<endl;
 	
@@ -169,18 +169,21 @@ void LidDrivenCavity:: BoundaryCondition(){
 	}while(t<T);
 	
 	ofstream stream;
-	stream.open("/home/li/Desktop/hpc/new-hpc/test.txt");
+	ofstream vorticity;
+	stream.open("/home/li/Desktop/hpc/new-hpc/s.txt");
+	vorticity.open("/home/li/Desktop/hpc/new-hpc/v.txt");
+	
 	//stream<<"998"<<endl;
 	for(int i =0;i<Nx*Ny;++i){
 		//for(int j =0; j<Ny;++j){
 			
 			stream<<s[i]<<endl;
-			//stream<<" ";
+			vorticity<<v[i]<<endl;
 		//}
 		
 	}
 	stream.close();
-	
+	vorticity.close();
 }
 
 

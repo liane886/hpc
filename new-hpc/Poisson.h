@@ -22,7 +22,7 @@ public:
 	~Poisson();
 	//void Initialize(int& Nx,int& Ny);
 	void buildMA();
-	void PPTRF();
+	void CholeskyFactorzation();
 	void SolvePoisson(double* s,double*v);
 	void PInitialise (int& Nx,int& Ny);
 	void SetDomainSize (double xlen,double ylen);

@@ -37,8 +37,8 @@ int main(int argc, char **argv)
 	int NumberofPoints = (Nx-2)*(Ny-2);
 	double xlen = 1.0;
 	double ylen = 1.0;
-	double Re = 200.0;
-	double T = 0.1;
+	double Re = 100.0;
+	double T = 1;
 	double dt = 0.0005;
 	//int N = (Nx-2)*(Ny-2);
     // Create a new instance of the LidDrivenCavity class
@@ -85,6 +85,6 @@ int main(int argc, char **argv)
 //	}
 //	stream.close();
  
-
+	delete solver;
 	return 0;
 }
