@@ -51,11 +51,11 @@ void Poisson::PInitialise(int& Nx, int& Ny)
 	this->Nx = Nx-2;
 	this->Ny = Ny-2;
 	this->N = (this->Nx)*(this->Ny);
-	det_y = Ly/double (Ny+1);
-	det_x = Lx/double (Nx+1);
-	this->beta[1] = -1/(det_y*det_y);
-	this->beta[2] = -1/(det_x*det_x);
-	this->beta[0] = 2*(1/(det_y*det_y)+1/(det_x*det_x));
+	det_y = Ly/double (Ny-1);
+	det_x = Lx/double (Nx-1);
+	this->beta[2] = -1.0/(det_y*det_y);
+	this->beta[1] = -1.0/(det_x*det_x);
+	this->beta[0] = -2.0*(beta[1] + beta[2]);
 
 	A = new double[N*(this->Ny+1)]{};
 	
@@ -131,13 +131,13 @@ void Poisson::SolvePoisson(double* s,double*v){
         }
 		
 //        // Populate streamfunction BC values x-direction
-//        F77NAME(daxpy) (Ny, -beta[2], &s[1], 1, vCopy, 1);
-//        F77NAME(daxpy) (Ny, -beta[2], &s[counter*(Nx+1) + 1], 1, &vCopy[Ny*(Nx-1)], 1);
+//        F77NAME(daxpy) (Ny, -beta[1], &s[1], 1, vCopy, 1);
+//        F77NAME(daxpy) (Ny, -beta[1], &s[counter*(Nx+1) + 1], 1, &vCopy[Ny*(Nx-1)], 1);
 //
 //        // Populate streamfunction BC values y-direction
-//        F77NAME(daxpy) (Nx, -beta[1], &s[Ny +2], (Ny + 2), vCopy, Ny);
-//        F77NAME(daxpy) (Nx, -beta[1], &s[2*(Ny +2) - 1], (Ny + 2), &vCopy[Ny-1], Ny);
-//
+//        F77NAME(daxpy) (Nx, -beta[2], &s[Ny +2], (Ny + 2), vCopy, Ny);
+//        F77NAME(daxpy) (Nx, -beta[2], &s[2*(Ny +2) - 1], (Ny + 2), &vCopy[Ny-1], Ny);
+
 
 		int info;
 // Solve linear system with LAPACK:

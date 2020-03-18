@@ -25,7 +25,8 @@ public:
 	void CalVorticityTplus( double* v,double* s,double* vorticity_inter);
 	void BoundaryCondition();
     void Integrate();
-
+	void PrintResult2file();
+	void Velocity(double* s,double* velocity_dx,double* velocity_dy);
     // Add any other public functions
 
 private:
@@ -41,5 +42,6 @@ private:
     double Re;
 	int N;  //the size of matrix A and array of inter vorticity & stream  
 	double* vorticity_inter = nullptr;
-
+	double* velocity_dx = nullptr;
+	double* velocity_dy = nullptr;
 };
