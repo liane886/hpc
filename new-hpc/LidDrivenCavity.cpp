@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <fstream>
 #include <cstring>
-
+#include <time.h>
 //#include "cblas.h"
 //#include "/home/li/Desktop/header/cblas/CBLAS/include/cblas.h"
 
@@ -135,27 +135,32 @@ void LidDrivenCavity:: BoundaryCondition(){
 		s[j] =0;
 		s[j+(Nx-1)*Ny] = 0;
 	}
-//Bottom BC
+
 	for (int i = 0; i < this -> Nx; i++){
+		//Bottom BC
 		v[i*Ny] = (s[i*(Ny)]-s[i*(Ny)+1])*(2.0/(det_y*det_y)); 
-	}
-//top BC			
-	for (int i = 0; i < this -> Nx ; i++){ 
-		v[(i+1)*Ny - 1] = (s[(i+1)*Ny - 1]-s[(i+1)*Ny - 2])*(2.0/(det_y*det_y)) - (2.0*U/det_y);  	
+		//top BC
+		v[(i+1)*Ny - 1] = (s[(i+1)*Ny - 1]-s[(i+1)*Ny - 2])*(2.0/(det_y*det_y)) - (2.0*U/det_y); 
 	}
 			
+//	for (int i = 0; i < this -> Nx ; i++){ 
+//		v[(i+1)*Ny - 1] = (s[(i+1)*Ny - 1]-s[(i+1)*Ny - 2])*(2.0/(det_y*det_y)) - (2.0*U/det_y);  	
+//	}
+//			
 			
-//left BC
+
 	for (int i = 0; i < this -> Ny; i++){
+		//left BC
 		v[i] = (s[i]-s[i+Ny])*(2.0/(det_x*det_x));
+		v[i + (Nx - 1)*Ny] = (s[i + (Nx - 1)*Ny]-s[i + (Nx - 2)*Ny])*(2.0/(det_x*det_x)); //right BC
 	}
 			
-//right BC
+
        
-	for (int i = 0; i < this -> Ny; i++){
-		v[i + (Nx - 1)*Ny] = (s[i + (Nx - 1)*Ny]-s[i + (Nx - 2)*Ny])*(2.0/(det_x*det_x));
-	}
-        
+//	for (int i = 0; i < this -> Ny; i++){
+//		
+//	}
+//        
 }
 /**  Solve inter vortisity 
  * @brief Solve inter vortisity by y = A*x --> y    && using cblas-dsbmv (band& symmetric matrix)
@@ -170,8 +175,9 @@ void LidDrivenCavity:: BoundaryCondition(){
 	int counter =0;
 
 	do{
+clock_t start,finish;
 		
-	
+
 	CalVorticityT(-1.0,this->v,this->s);
 	//cout<<v[180]<<endl;	//Initialise();	
 	
@@ -189,11 +195,15 @@ void LidDrivenCavity:: BoundaryCondition(){
 	}
 		
 	F77NAME(dcopy)(Ny*Nx, vorticity_inter, 1, v, 1);
-	
-	
+
+double  totaltime;
+start = clock();
 	//for (int k = 0; k < 6; k++ ){
 	Psolver -> SolvePoisson(this->s,this->v);
-	//}
+finish = clock();
+totaltime=(double)(finish - start)/CLOCKS_PER_SEC;
+cout<<"TIME takes using 'dpbtrs' for each iteration     "<<totaltime<<endl;
+
 	counter +=1;
 	cout<<counter<<endl;
 	
