@@ -85,6 +85,38 @@ void LidDrivenCavity::SetReynoldsNumber(double re)
 	this ->Re = re;
 }
 
+
+void splitDomian4MPI(){
+	
+//Split the grid points according to the number of partitions
+	//in x-direction
+	subX = grids[0] / partitionNum[0];
+	subX_Remaind = grids[0] % partitionNum[0];
+	//in y -direction
+	subY = grids[1] / partitionNum[1];
+	subY_Remaind = grids[1] % partitionNum[1];
+
+	
+	if (coords[0] <  subX_Remaind ){
+		subGrids [0] = subX + 1;
+	}
+	else{
+		subGrids [0] = subX;
+	}
+
+	if (coords[1] <  subY_Remaind ){
+		subGrids [1] = subY + 1;
+	}
+	else{
+		subGrids [1] = subY;
+	}
+	
+}
+
+
+
+
+
 void LidDrivenCavity::Initialise()
 {
 	this ->v = new double[Nx*Ny]{};
