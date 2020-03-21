@@ -27,8 +27,9 @@ public:
     void Integrate();
 	void PrintResult2file();
 	void Velocity(double* s,double* velocity_dx,double* velocity_dy);
-    // Add any other public functions
-
+    void splitDomian4MPI();
+	void MPIrecv(double* recv)
+	void MPIsend(double* send);
 private:
 	Poisson* Psolver;
     double* v = nullptr;
