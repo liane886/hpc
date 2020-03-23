@@ -5,6 +5,7 @@
 #include <fstream>
 #include <cstring>
 #include <time.h>
+#include <mpi.h>
 //#include "cblas.h"
 //#include "/home/li/Desktop/header/cblas/CBLAS/include/cblas.h"
 

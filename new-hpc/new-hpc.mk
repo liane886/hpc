@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=li
-Date                   :=19/03/20
+Date                   :=23/03/20
 CodeLitePath           :=/home/li/.codelite
 LinkerName             :=g++
 SharedObjectLinkerName :=g++ -shared -fPIC
@@ -39,8 +39,8 @@ LinkOptions            :=
 IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch). 
 IncludePCH             := 
 RcIncludePath          := 
-Libs                   := $(LibrarySwitch)blas $(LibrarySwitch)cblas $(LibrarySwitch)lapack 
-ArLibs                 :=  "blas" "cblas" "lapack" 
+Libs                   := $(LibrarySwitch)blas $(LibrarySwitch)cblas $(LibrarySwitch)lapack $(LibrarySwitch)mpi 
+ArLibs                 :=  "blas" "cblas" "lapack" "mpi" 
 LibPath                := $(LibraryPathSwitch). 
 
 ##
