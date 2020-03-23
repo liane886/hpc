@@ -6,10 +6,7 @@
 #include <cstring>
 #include <time.h>
 #include <mpi.h>
-//#include "cblas.h"
-//#include "/home/li/Desktop/header/cblas/CBLAS/include/cblas.h"
-
-
+#include "cblas.h"
 
 // This tells the C++ compiler to use C-style naming of symbols for these
 // functions, as opposed to the "mangled" symbols used in C++. The need to
@@ -22,7 +19,9 @@ extern "C" {
                           const double *x, const int& incx,
                           const double *y, const int& incy);
 }
-LidDrivenCavity::LidDrivenCavity(double dt,double T, int Nx,int Ny,double Lx, double Ly,double Re)
+LidDrivenCavity::LidDrivenCavity( double dt,double T, int Nx,int Ny,double Lx, double Ly,double Re)
+
+//LidDrivenCavity::LidDrivenCavity(MPI_Comm MPIcomm, int ShiftRank, double dt,double T, int Nx,int Ny,double Lx, double Ly,double Re)   <-- used for mpi
 {	 
      this ->T = T;
      this ->Nx = Nx;
@@ -31,9 +30,10 @@ LidDrivenCavity::LidDrivenCavity(double dt,double T, int Nx,int Ny,double Lx, do
      this ->Ly = Ly;
      this ->Re = Re;
 	 this ->dt = dt;
-	 //this ->N = N;
-	
-	// this ->vorticity_inter = {};
+//	 this ->ShiftRank[0] = ShiftRank[0];                         <-------------- MPI
+//	 this ->ShiftRank[1] = ShiftRank[1];
+//	 this ->ShiftRank[2] = ShiftRank[2];
+//	 this ->ShiftRank[3] = ShiftRank[3];
 	 cout << "Object is being created" << endl;
 }
 
@@ -42,12 +42,7 @@ LidDrivenCavity::LidDrivenCavity(double dt,double T, int Nx,int Ny,double Lx, do
 LidDrivenCavity::~LidDrivenCavity()
 {
 	cout << "Object is being deleted" << endl;	// print information
-//	delete[]v;
-//	delete[]vorticity_inter;
-//	delete[]s;
-//	delete[]velocity_dx;
-//	delete[]velocity_dy;
-	
+
 }
 
 
@@ -89,19 +84,19 @@ void LidDrivenCavity::SetReynoldsNumber(double re)
 
 void LidDrivenCavity::Initialise()
 {
-	//count the size of subdomain
-	if (ShiftRank[0] != MPI_PROC_NULL){
-		Ny += 1;
-	}
-	if (ShiftRank[1] != MPI_PROC_NULL){
-		Ny += 1;
-	}
-	if (ShiftRank[2] != MPI_PROC_NULL){
-		Nx += 1;
-	}
-	if (ShiftRank[3] != MPI_PROC_NULL){
-		Nx += 1;
-	}
+//	//count the size of subdomain                        <----------------- MPI
+//	if (ShiftRank[0] != MPI_PROC_NULL){
+//		Ny += 1;
+//	}
+//	if (ShiftRank[1] != MPI_PROC_NULL){
+//		Ny += 1;
+//	}
+//	if (ShiftRank[2] != MPI_PROC_NULL){
+//		Nx += 1;
+//	}
+//	if (ShiftRank[3] != MPI_PROC_NULL){
+//		Nx += 1;
+//	}
 
 	
 	this ->v = new double[Nx*Ny]{};
@@ -121,7 +116,8 @@ void LidDrivenCavity::Initialise()
 
 }
 
-void LidDrivenCavity:: BoundaryCondition(){
+void LidDrivenCavity:: BoundaryCondition()
+{
 	double U = 1.0;
 	double det_y = Ly/double (Ny-1);
 	double det_x = Lx/double (Nx-1);
@@ -130,7 +126,7 @@ void LidDrivenCavity:: BoundaryCondition(){
 
 //BC for streamfunction & vorticity
 	//Bottom BC
-	if (ShiftRank[0] == MPI_PROC_NULL){
+	//if (ShiftRank[0] == MPI_PROC_NULL){                           <----- set for mpi
 		for (int i = 0; i < this -> Nx; i++){
 			
 			v[i*Ny] = (s[i*(Ny)]-s[i*(Ny)+1])*(2.0/(det_y*det_y)); 
@@ -139,31 +135,28 @@ void LidDrivenCavity:: BoundaryCondition(){
 	}
 	
 	//top BC
-	if (ShiftRank[1] == MPI_PROC_NULL){
+	//if (ShiftRank[1] == MPI_PROC_NULL){                            <----- set for mpi
 		
 		for (int i = 0; i < this -> Nx ; i++){ 
 			v[(i+1)*Ny - 1] = (s[(i+1)*Ny - 1]-s[(i+1)*Ny - 2])*(2.0/(det_y*det_y)) - (2.0*U/det_y);  
 			s[(i+1)*Ny-1] = 0;	
 	}
 	//left BC		
-	if (ShiftRank[2] == MPI_PROC_NULL){
+	//if (ShiftRank[2] == MPI_PROC_NULL){                            <----- set for mpi
 		for (int i = 0; i < this -> Ny; i++){
 			v[i] = (s[i]-s[i+Ny])*(2.0/(det_x*det_x));
 			s[i] =0;
 		}
-	}	
+	//}	
 	//right BC	
-	if (ShiftRank[2] == MPI_PROC_NULL){
+	//if (ShiftRank[2] == MPI_PROC_NULL){                            <----- set for mpi
 		for (int i = 0; i < this -> Ny; i++){
-			s[j+(Nx-1)*Ny] = 0;
+			s[i+(Nx-1)*Ny] = 0;
 			v[i + (Nx - 1)*Ny] = (s[i + (Nx - 1)*Ny]-s[i + (Nx - 2)*Ny])*(2.0/(det_x*det_x)); 
 		}
-	}
+	//}
 			
 
-       
-
-        
 }
 
 /**  Solve inter vortisity 
@@ -179,8 +172,6 @@ void LidDrivenCavity:: BoundaryCondition(){
 	int counter =0;
 
 	do{
-//clock_t start,finish;
-		
 
 	CalVorticityT(-1.0,this->v,this->s);
 	
@@ -190,24 +181,17 @@ void LidDrivenCavity:: BoundaryCondition(){
 	CalVorticityT(dt/Re,vorticity_inter,v);
 
 	CalVorticityTplus(v,s,vorticity_inter);
-	
-//	 // Add the value of v to v_new
-//     for (int i=1; i < Nx-1; i++ ){
-//          for (int j=1; j< Ny -1; j++){
-//			vorticity_inter[ j + Ny*i ] += v[ j + Ny*i ];
-//		}
-//	}
 		
 	F77NAME(dcopy)(Ny*Nx, vorticity_inter, 1, v, 1);
-//
-//double  totaltime;
-//start = clock();
-	//for (int k = 0; k < 6; k++ ){
+	
+    //MPIsend(v);                   <----------------------- call mpi send & recv function
+	//MPIrecv(v);
+	
 	Psolver -> SolvePoisson(this->s,this->v);
-//finish = clock();
-//totaltime=(double)(finish - start)/CLOCKS_PER_SEC;
-//cout<<"TIME takes using 'dpbtrs' for each iteration     "<<totaltime<<endl;
-
+	//MPIsend(s);                   <----------------------- call mpi send & recv function
+	//MPIrecv(s);
+	
+	
 	counter +=1;
 	cout<<counter<<endl;
 	
@@ -219,7 +203,7 @@ void LidDrivenCavity:: BoundaryCondition(){
 	
 	// calculate horizontal and vertical velocity 
 	Velocity(s,velocity_dx,velocity_dy);
-	PrintResult2file();
+	
 	
 }
 
@@ -277,148 +261,177 @@ void LidDrivenCavity::Velocity(double* str, double* velocoty_dx, double* velocot
 	}
 }
 
+//-------------------------------------------------------Output  the result to files ----------------------------------------------------------//
 
-void LidDrivenCavity::PrintResult2file(filepath_stream,filepath_vorticity,filepath_vh,filepath_vv){
+void LidDrivenCavity::PrintResult2file()
+{
 	
-// Get the number of processes
-	int size;
-	MPI_Comm_size(MPIcomm, &size);
-
-	// Counte to get the interface point
-	int yStart = 0, yEnd = 0, xStart = 0, xEnd = 0;
-
-	if (ShiftRank[0] != -2) yStart++;
-	if (ShiftRank[1] != -2) yEnd++;
-	if (ShiftRank[2] != -2) xStart++;
-	if (ShiftRank[3] != -2) xEnd++;
-		
 // Open file and set as output only and overwrite
+	filepath_stream = "stream.txt";
+	filepath_vorticity = "vorticity.txt";
+	filepath_vh = "horizontal velocity";
+	filepath_vv = "vertical velocity";
+	
 	ofstream stream(filepath_stream, ios::out | ios::trunc);
 	ofstream vorticity(filepath_vorticity, ios::out | ios::trunc);
 	ofstream V_h(filepath_vh, ios::out | ios::trunc);  //file stored horizontal velocity
 	ofstream V_v(filepath_vv, ios::out | ios::trunc);  //file stored vertical velocity
 
-	for (int k = 0; k < size; k++){
-		if (k == 0 && k ==rank  ){
-
-			for (int i = xStart; i < (Nx - xEnd); i++ ){
-				for (int j = yStart; j < (Ny - yEnd); j++ ){
-					stream << s[j + i*Ny] << endl;
-					vorticity << v[j + i*Ny] << endl;
-					V_h << velU[j + i*Ny] << endl;
-					V_v << velV[j + i*Ny] << endl;
-				}
-			}
-		}
-		else if (k == rank){
-				
-			for (int i = xShift_Start; i < (Nx - xShift_End); i++ ){
-				for (int j = yShift_Start; j < (Ny - yShift_End); j++ ){
-					stream << s[j + i*Ny] << endl;
-					vorticity << v[j + i*Ny] << endl;
-					V_h << velU[j + i*Ny] << endl;
-					V_v << velV[j + i*Ny] << endl;
-				}
-			}
-
-		}
+	for(int i =0;i<Nx*Ny;++i){
 			
-            // Ensure the data is writed to the file by a single process at a time
-		MPI_Barrier(MPIcomm);
+			stream<<s[i]<<endl;
+			vorticity<<v[i]<<endl;
+			V_h << velocity_dx[i]<<endl;
+			V_v << velocity_dy[i]<<endl;
+		
 	}
 	stream.close();
-	vorticity.close();				
+	vorticity.close();
 	V_h.close();
 	V_v.close();
 }
 
-          
-
-void LidDrivenCavity::MPIsend(double* send){
-        
-		bufNx   = new double [Nx]{};   
-		bufNy = new double [Ny]{};
-		
-//send values to neighbors in all directions
-        
-        // Neighbor below
-        if (ShiftRank[0] != -2){
-			
-			F77NAME(dcopy) (Nx, &send[1], Ny, bufNy, 1);
-			MPI_Send(bufNy, Nx, MPI_DOUBLE, ShiftRank[0], rank, MPIcomm)
-           
-        }   
-
-        // Nbor above
-        if (ShiftRank[1] != -2){
-			
-			F77NAME(dcopy) (Nx, &send[Ny-2], Ny, bufNx, 1);
-			MPI_Send(bufNx, Nx, MPI_DOUBLE, ShiftRank[1], rank, MPIcomm)
-			
-        }
-
-        // Nbor leftward
-        if (ShiftRank[2] != -2){
-		
-			F77NAME(dcopy) (Ny, &send[Ny], Ny, bufNy, 1);
-			MPI_Send(bufNy, Nx, MPI_DOUBLE, ShiftRank[2], rank, MPIcomm)
-			
-            
-        }
-
-        // Nbor rightward
-        if (ShiftRank[3] != -2){
-			
-			F77NAME(dcopy) (Ny, &send[Ny*(Ny-2)], Ny, bufNy, 1);
-			MPI_Send(bufNy, Ny, MPI_DOUBLE, ShiftRank[3], rank, MPIcomm)
-			
-           
-        }
-
-}
 
 
+//void LidDrivenCavity::PrintResult2file(filepath_stream,filepath_vorticity,filepath_vh,filepath_vv){    <-------- will be used when using mpi
+//	
+//// Get the number of processes
+//	int size;
+//	MPI_Comm_size(MPIcomm, &size);
+//
+//	// Counte to get the interface point
+//	int yStart = 0, yEnd = 0, xStart = 0, xEnd = 0;
+//
+//	if (ShiftRank[0] != -2) yStart++;
+//	if (ShiftRank[1] != -2) yEnd++;
+//	if (ShiftRank[2] != -2) xStart++;
+//	if (ShiftRank[3] != -2) xEnd++;
+//	
+//// Open file and set as output only and overwrite
+//	ofstream stream(filepath_stream, ios::out | ios::trunc);
+//	ofstream vorticity(filepath_vorticity, ios::out | ios::trunc);
+//	ofstream V_h(filepath_vh, ios::out | ios::trunc);  //file stored horizontal velocity
+//	ofstream V_v(filepath_vv, ios::out | ios::trunc);  //file stored vertical velocity
+//
+//	for (int k = 0; k < size; k++){
+//		if (k == 0 && k ==rank  ){
+//
+//			for (int i = xStart; i < (Nx - xEnd); i++ ){
+//				for (int j = yStart; j < (Ny - yEnd); j++ ){
+//					stream << s[j + i*Ny] << endl;
+//					vorticity << v[j + i*Ny] << endl;
+//					V_h << velU[j + i*Ny] << endl;
+//					V_v << velV[j + i*Ny] << endl;
+//				}
+//			}
+//		}
+//		else if (k == rank){
+//				
+//			for (int i = xShift_Start; i < (Nx - xShift_End); i++ ){
+//				for (int j = yShift_Start; j < (Ny - yShift_End); j++ ){
+//					stream << s[j + i*Ny] << endl;
+//					vorticity << v[j + i*Ny] << endl;
+//					V_h << velU[j + i*Ny] << endl;
+//					V_v << velV[j + i*Ny] << endl;
+//				}
+//			}
+//
+//		}
+//			
+//            // Ensure the data is writed to the file by a single process at a time
+//		MPI_Barrier(MPIcomm);
+//	}
+//	stream.close();
+//	vorticity.close();				
+//	V_h.close();
+//	V_v.close();
+//}
 
-void LidDrivenCavity::MPIrecv(double* recv){
-        
-		bufNx   = new double [Nx]{};   
-		bufNy = new double [Ny]{};
-    
- //recv the values from neighbor
- 
-        //Neighbor below
-        if (ShiftRank[0] != -2){
-		MPI_Recv(bufNx, count, MPI_DOUBLE, ShiftRank[0], ShiftRank[0], MPIcomm, MPI_STATUS_IGNORE);
-        F77NAME(dcopy) (Nx, bufNx, 1, recv, Ny);
-        }
-		
-        //Neighbor above
-        if (ShiftRank[1] != -2){
-			
-			
-		MPI_Recv(bufNx, Nx, MPI_DOUBLE, ShiftRank[1], ShiftRank[1], MPIcomm, MPI_STATUS_IGNORE);
-        F77NAME(dcopy) (Nx, bufNx, 1, &recv[Ny-1], Ny);
-			
-		
-        }
-		
-       //Neighbor leftward
-        if (ShiftRank[2] != -2){
-		MPI_Recv(bufNy, count, MPI_DOUBLE, ShiftRank[2], ShiftRank[2], MPIcomm, MPI_STATUS_IGNORE);
-        F77NAME(dcopy) (Ny, bufNy, 1, recv, Nx);
-		
-        }
-		
+		//-------------------------------------------------------MPI SEND & RECV----------------------------------------------------------//
 
-        //Neighbor rightward
-        if (ShiftRank[3] != -2){
-		MPI_Recv(bufNy, count, MPI_DOUBLE, ShiftRank[3], ShiftRank[3], MPIcomm, MPI_STATUS_IGNORE);
-        F77NAME(dcopy) (Ny, bufNy, 1, &recv[Ny*(Nx-1)], Nx);
-		
-        }
 
- 
-        
-}
+//void LidDrivenCavity::MPIsend(double* send){
+//        
+//		bufNx   = new double [Nx]{};   
+//		bufNy = new double [Ny]{};
+//		
+////send values to neighbors in all directions
+//        
+//        // Neighbor below
+//        if (ShiftRank[0] != -2){
+//			
+//			F77NAME(dcopy) (Nx, &send[1], Ny, bufNy, 1);
+//			MPI_Send(bufNy, Nx, MPI_DOUBLE, ShiftRank[0], rank, MPIcomm)
+//           
+//        }   
+//
+//        // Nbor above
+//        if (ShiftRank[1] != -2){
+//			
+//			F77NAME(dcopy) (Nx, &send[Ny-2], Ny, bufNx, 1);
+//			MPI_Send(bufNx, Nx, MPI_DOUBLE, ShiftRank[1], rank, MPIcomm)
+//			
+//        }
+//
+//        // Nbor leftward
+//        if (ShiftRank[2] != -2){
+//		
+//			F77NAME(dcopy) (Ny, &send[Ny], Ny, bufNy, 1);
+//			MPI_Send(bufNy, Nx, MPI_DOUBLE, ShiftRank[2], rank, MPIcomm)
+//			
+//            
+//        }
+//
+//        // Nbor rightward
+//        if (ShiftRank[3] != -2){
+//			
+//			F77NAME(dcopy) (Ny, &send[Ny*(Ny-2)], Ny, bufNy, 1);
+//			MPI_Send(bufNy, Ny, MPI_DOUBLE, ShiftRank[3], rank, MPIcomm)
+//			
+//           
+//        }
+//
+//}
+//
+//
+//
+//void LidDrivenCavity::MPIrecv(double* recv){
+//        
+//		bufNx   = new double [Nx]{};   
+//		bufNy = new double [Ny]{};
+//    
+// //recv the values from neighbor
+// 
+//        //Neighbor below
+//        if (ShiftRank[0] != -2){
+//		MPI_Recv(bufNx, count, MPI_DOUBLE, ShiftRank[0], ShiftRank[0], MPIcomm, MPI_STATUS_IGNORE);
+//        F77NAME(dcopy) (Nx, bufNx, 1, recv, Ny);
+//        }
+//		
+//        //Neighbor above
+//        if (ShiftRank[1] != -2){
+//			
+//			
+//		MPI_Recv(bufNx, Nx, MPI_DOUBLE, ShiftRank[1], ShiftRank[1], MPIcomm, MPI_STATUS_IGNORE);
+//        F77NAME(dcopy) (Nx, bufNx, 1, &recv[Ny-1], Ny);
+//			
+//		
+//        }
+//		
+//       //Neighbor leftward
+//        if (ShiftRank[2] != -2){
+//		MPI_Recv(bufNy, count, MPI_DOUBLE, ShiftRank[2], ShiftRank[2], MPIcomm, MPI_STATUS_IGNORE);
+//        F77NAME(dcopy) (Ny, bufNy, 1, recv, Nx);
+//		
+//        }
+//		
+//
+//        //Neighbor rightward
+//        if (ShiftRank[3] != -2){
+//		MPI_Recv(bufNy, count, MPI_DOUBLE, ShiftRank[3], ShiftRank[3], MPIcomm, MPI_STATUS_IGNORE);
+//        F77NAME(dcopy) (Ny, bufNy, 1, &recv[Ny*(Nx-1)], Nx);
+//		
+//        }
+//}
 
 

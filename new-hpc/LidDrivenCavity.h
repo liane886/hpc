@@ -12,24 +12,34 @@ using namespace std;
 class LidDrivenCavity
 {
 public:
-    LidDrivenCavity(double dt,double T, int Nx,int Ny,double Lx, double Ly,double Re);
+//    LidDrivenCavity(MPI_Comm MPIcomm,int ShiftRank,double dt,double T, int Nx,int Ny,double Lx, double Ly,double Re);
+	LidDrivenCavity(double dt,double T, int Nx,int Ny,double Lx, double Ly,double Re);
     ~LidDrivenCavity();
 	
+	//initialise
     void SetDomainSize(double xlen, double ylen);
     void SetGridSize(int nx, int ny,int n);
     void SetTimeStep(double deltat);
     void SetFinalTime(double finalt);
     void SetReynoldsNumber(double Re);
     void Initialise();
+	void BoundaryCondition();
+
+	//intergrate
+	void Velocity(double* s,double* velocity_dx,double* velocity_dy);
 	void CalVorticityT(double alpha,double* vorticity_inter,double* s);
 	void CalVorticityTplus( double* v,double* s,double* vorticity_inter);
-	void BoundaryCondition();
     void Integrate();
+	
+	//IO
 	void PrintResult2file();
-	void Velocity(double* s,double* velocity_dx,double* velocity_dy);
-    void splitDomian4MPI();
-	void MPIrecv(double* recv)
-	void MPIsend(double* send);
+//	string filepath_stream,string filepath_vorticity,string filepath_vh,string filepath_vv
+
+// ----- MPI---
+//  void splitDomian4MPI();
+//	void MPIrecv(double* recv);
+//	void MPIsend(double* send);
+	
 private:
 	Poisson* Psolver;
     double* v = nullptr;
@@ -45,4 +55,7 @@ private:
 	double* vorticity_inter = nullptr;
 	double* velocity_dx = nullptr;
 	double* velocity_dy = nullptr;
+	string filepath_stream;
+	string filepath_vorticity,filepath_vh,filepath_vv;
+//	int ShiftRank[4];   ----------MPI
 };

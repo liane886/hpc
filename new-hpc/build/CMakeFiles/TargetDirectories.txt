@@ -1,0 +1,3 @@
+/home/li/Desktop/hpc/new-hpc/build/CMakeFiles/rebuild_cache.dir
+/home/li/Desktop/hpc/new-hpc/build/CMakeFiles/LidSolver.dir
+/home/li/Desktop/hpc/new-hpc/build/CMakeFiles/edit_cache.dir

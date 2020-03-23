@@ -8,7 +8,6 @@
     <File Name="LidDrivenCavity.h"/>
     <File Name="Poisson.h"/>
     <File Name="Poisson.cpp"/>
-    <File Name="test.txt"/>
   </VirtualDirectory>
   <Settings Type="Executable">
     <GlobalSettings>
@@ -105,4 +104,6 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>
